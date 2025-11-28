@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenovel - Writer's Studio</title>
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.5/mousetrap.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;600&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Design System --- */
+        :root {
+            /* Base Colors (Light) */
+            --bg-app: #f5f5f7;
+            --bg-sidebar: rgba(255, 255, 255, 0.85);
+            --bg-editor: #ffffff;
+            --bg-status: #ffffff; /* Status bar background */
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --accent-color: #007aff;
+            --accent-bg: rgba(0, 122, 255, 0.1);
+            --line-color: #d1e3f6;
+            --shadow-soft: 0 8px 30px rgba(0,0,0,0.06);
+            --shadow-pop: 0 4px 12px rgba(0,0,0,0.1);
+            
+            --font-ui: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mincho: 'Shippori Mincho', serif;
+            --font-gothic: 'Noto Sans JP', sans-serif;
+            --font-hand: 'Zen Kurenaido', sans-serif;
+            
+            --editor-width: 800px;
+            --editor-font-size: 18px;
+            --editor-line-height: 2.0em;
+            --editor-padding-top: 2.0em;
+            --status-height: 28px;
+        }
+
+        /* Dark Mode */
+        .dark-mode {
+            --bg-app: #000000;
+            --bg-sidebar: rgba(28, 28, 30, 0.85);
+            --bg-editor: #1c1c1e;
+            --bg-status: #1c1c1e;
+            --text-primary: #f5f5f7;
+            --text-secondary: #86868b;
+            --border-color: rgba(255, 255, 255, 0.12);
+            --accent-color: #0a84ff;
+            --accent-bg: rgba(10, 132, 255, 0.15);
+            --line-color: #2c2c2e;
+            --shadow-soft: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        /* Reader Mode */
+        .reader-mode.light-mode {
+            --bg-app: #f2efe4;
+            --bg-sidebar: rgba(248, 245, 235, 0.9);
+            --bg-editor: #fbf9f1;
+            --bg-status: #fbf9f1;
+            --text-primary: #4a3b32;
+            --text-secondary: #8c7b6d;
+            --border-color: rgba(74, 59, 50, 0.08);
+            --accent-color: #a67c52;
+            --accent-bg: rgba(166, 124, 82, 0.1);
+            --line-color: #e0d0c0;
+        }
+
+        .reader-mode.dark-mode {
+            --bg-app: #121212;
+            --bg-sidebar: rgba(20, 20, 20, 0.9);
+            --bg-editor: #181818;
+            --bg-status: #181818;
+            --text-primary: #b0b0b0;
+            --text-secondary: #666666;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --accent-color: #7a7a7a;
+            --accent-bg: rgba(255, 255, 255, 0.05);
+            --line-color: #222;
+        }
+
+        /* Base Reset */
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-app);
+            color: var(--text-primary);
+            transition: background-color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.4s ease;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* --- Main Layout --- */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Status Bar (VSCode Style) --- */
+        .app-status-bar {
+            height: var(--status-height);
+            background-color: var(--bg-status);
+            color: var(--text-primary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-size: 11px;
+            z-index: 50;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .status-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .status-item:hover { opacity: 1; }
+        .status-item.active { color: var(--accent-color); font-weight: bold; opacity: 1; }
+
+        .glass-panel {
+            background-color: var(--bg-sidebar);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-right: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+        }
+
+        /* Editor Area */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            background-color: var(--bg-app);
+            overflow: hidden;
+        }
+
+        .editor-scroll-area {
+            flex: 1;
+            overflow-y: overlay;
+            overflow-x: hidden;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        .editor-sheet {
+            background-color: var(--bg-editor);
+            width: 100%;
+            max-width: var(--editor-width);
+            min-height: 100%;
+            border-radius: 2px;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s ease;
+            position: relative;
+            margin-bottom: 100px;
+        }
+
+        textarea.main-editor {
+            background: transparent;
+            color: inherit;
+            resize: none;
+            border: none;
+            outline: none;
+            width: 100%;
+            height: 100%;
+            min-height: 80vh;
+            font-size: var(--editor-font-size);
+            line-height: var(--editor-line-height);
+            font-feature-settings: "palt";
+            caret-color: var(--accent-color);
+            padding: var(--editor-padding-top) 3rem; 
+            user-select: text;
+        }
+        
+        @media (max-width: 768px) {
+            textarea.main-editor { padding: var(--editor-padding-top) 1.5rem; }
+        }
+
+        textarea.main-editor::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.3;
+        }
+
+        /* Font Overrides */
+        .font-mincho textarea.main-editor { font-family: var(--font-mincho) !important; }
+        .font-gothic textarea.main-editor { font-family: var(--font-gothic) !important; }
+        .font-hand textarea.main-editor { font-family: var(--font-hand) !important; }
+
+        /* Lined Paper */
+        .style-lined textarea.main-editor {
+            background-image: linear-gradient(transparent calc(100% - 1px), var(--line-color) calc(100% - 1px));
+            background-size: 100% var(--editor-line-height);
+            background-attachment: local;
+            background-position: 0 4px;
+        }
+        
+        /* Vertical Mode */
+        .writing-vertical .editor-sheet {
+            display: flex;
+            flex-direction: row-reverse;
+        }
+        .writing-vertical textarea.main-editor {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            height: 80vh;
+            width: 100%;
+            overflow-x: auto;
+            padding: 3rem var(--editor-padding-top);
+        }
+        .writing-vertical.style-lined textarea.main-editor {
+            background-image: linear-gradient(90deg, transparent calc(100% - 1px), var(--line-color) calc(100% - 1px));
+            background-size: var(--editor-line-height) 100%;
+            background-position: -4px 0;
+        }
+
+        /* Sidebar Tree */
+        .tree-item {
+            border-radius: 6px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .tree-item:hover { background-color: rgba(0,0,0,0.03); }
+        .dark-mode .tree-item:hover { background-color: rgba(255,255,255,0.05); }
+        .tree-item.active { 
+            background-color: var(--accent-bg); 
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        .ghost-class { opacity: 0.5; background: var(--accent-bg); }
+
+        /* Context Menu */
+        #contextMenu {
+            position: fixed;
+            z-index: 100;
+            background: var(--bg-sidebar);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-pop);
+            padding: 4px;
+            min-width: 160px;
+            display: none;
+            animation: menuFade 0.1s ease-out;
+        }
+        @keyframes menuFade { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .ctx-item {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+        .ctx-item:hover { background-color: var(--accent-color); color: white; }
+        .ctx-item.danger:hover { background-color: #ff3b30; }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+        .dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+
+        /* Zen Mode Adjustments */
+        body.zen-mode .sidebar { transform: translateX(-100%); opacity: 0; pointer-events: none; width: 0; }
+        body.zen-mode .sidebar-right { transform: translateX(100%); opacity: 0; pointer-events: none; width: 0; }
+        body.zen-mode .toolbar-float { transform: translateY(-200%); opacity: 0; }
+        body.zen-mode .editor-sheet { box-shadow: none; background-color: transparent; }
+        body.zen-mode .zen-exit { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        body.zen-mode .app-status-bar { opacity: 0; pointer-events: none; }
+        /* Only zen timer visible */
+        body.zen-mode #zenTimerDisplay { opacity: 1; pointer-events: auto; }
+
+        /* Floating Toolbar */
+        .toolbar-float {
+            background: var(--bg-sidebar);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-pop);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Settings Active State */
+        .setting-btn.active {
+            border-color: var(--accent-color);
+            background-color: var(--accent-bg);
+            color: var(--accent-color);
+        }
+        /* Ensure text is readable in active state for dark mode */
+        .dark-mode .setting-btn.active {
+            color: #ffffff;
+            background-color: var(--accent-color);
+        }
+
+        /* Modals Generic */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-container {
+            background: var(--bg-editor);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid var(--border-color);
+        }
+        .modal-overlay.active .modal-container { transform: scale(1); }
+
+        .modal-title { font-weight: bold; font-size: 18px; margin-bottom: 8px; color: var(--text-primary); font-family: var(--font-mincho); }
+        .modal-msg { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-app);
+            color: var(--text-primary);
+            outline: none;
+            margin-bottom: 24px;
+            transition: border-color 0.2s;
+        }
+        .modal-input:focus { border-color: var(--accent-color); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background: var(--bg-app); color: var(--text-secondary); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background: var(--border-color); }
+        .btn-primary { background: var(--accent-color); color: white; border: 1px solid transparent; box-shadow: 0 2px 8px var(--accent-bg); }
+        .btn-danger { background: #ff3b30; color: white; border: 1px solid transparent; }
+
+        /* Welcome Modal Special */
+        .welcome-container { max-width: 600px; text-align: center; position: relative; }
+        .welcome-logo { font-size: 48px; margin-bottom: 16px; color: var(--accent-color); }
+        .welcome-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+        .welcome-btn { 
+            padding: 20px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            text-align: left; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            background: var(--bg-app);
+        }
+        .welcome-btn:hover { border-color: var(--accent-color); background: var(--bg-editor); box-shadow: var(--shadow-pop); transform: translateY(-2px); }
+        .welcome-btn h4 { font-weight: bold; color: var(--text-primary); margin-bottom: 4px; font-size: 14px; }
+        .welcome-btn p { font-size: 12px; color: var(--text-secondary); }
+        
+        .welcome-lang-selector {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            width: auto;
+            margin: 0;
+        }
+        .welcome-footer {
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .lang-select {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-app);
+            color: var(--text-primary);
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Pomodoro Floating Window */
+        .pomo-window {
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            width: 280px;
+            background: var(--bg-sidebar);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-soft);
+            z-index: 60;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .pomo-window.active { display: flex; }
+        
+        .pomo-display {
+            font-size: 48px;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            margin: 10px 0;
+            color: var(--text-primary);
+            font-family: var(--font-gothic);
+        }
+        
+        .pomo-controls {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .pomo-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .pomo-btn-start { background: var(--accent-color); color: white; }
+        .pomo-btn-stop { background: var(--bg-app); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .pomo-btn-reset { background: transparent; color: var(--text-secondary); }
+        
+        .pomo-settings {
+            width: 100%;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .pomo-input {
+            width: 60px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-app);
+            color: var(--text-primary);
+            text-align: center;
+            font-size: 12px;
+        }
+
+        /* Toast Notifications */
+        #toastContainer {
+            position: fixed;
+            bottom: 60px; /* Above status bar */
+            right: 24px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--bg-sidebar);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-pop);
+            font-size: 13px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 280px;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            pointer-events: auto;
+        }
+        .toast.error { border-left: 4px solid #ff3b30; }
+        .toast.success { border-left: 4px solid #34c759; }
+        .toast.info { border-left: 4px solid var(--accent-color); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+        /* Zen Timer Float */
+        .zen-timer-display {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            z-index: 60;
+            backdrop-filter: blur(4px);
+        }
+        
+    </style>
+</head>
+<body class="light-mode font-mincho">
+
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal-overlay active">
+        <div class="modal-container welcome-container">
+            <div class="welcome-logo"><i data-lucide="feather" class="w-16 h-16 mx-auto"></i></div>
+            <h2 class="modal-title text-2xl" style="font-family: var(--font-gothic);">Zenovel</h2>
+            <p class="modal-msg">Focus on your story.</p>
+            
+            <div class="welcome-actions">
+                <div class="welcome-btn" onclick="startNewProject()">
+                    <h4 data-i18n="newProject">New Project</h4>
+                    <p data-i18n="newProjectDesc">Start a fresh story from scratch.</p>
+                </div>
+                <div class="welcome-btn" onclick="loadLastProject()">
+                    <h4 data-i18n="continue">Continue</h4>
+                    <p><span id="lastProjectName" class="font-medium">Untitled</span></p>
+                </div>
+                <div class="welcome-btn" onclick="triggerImport()">
+                    <h4 data-i18n="import">Import JSON</h4>
+                    <p data-i18n="importDesc">Restore from a backup file.</p>
+                </div>
+                <div class="welcome-btn" onclick="closeWelcome(); toggleSettings()">
+                    <h4 data-i18n="preferences">Settings</h4>
+                    <p data-i18n="settingsDesc">Configure appearance.</p>
+                </div>
+            </div>
+
+            <div class="welcome-footer">
+                <select class="lang-select" onchange="setLang(this.value)">
+                    <option value="ja">日本語</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pomo Floating Window -->
+    <div id="pomoWindow" class="pomo-window">
+        <div class="flex justify-between w-full items-center mb-2">
+            <span class="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Pomodoro</span>
+            <button onclick="togglePomoWindow()" class="hover:text-[var(--accent-color)]"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div id="pomoDisplay" class="pomo-display">25:00</div>
+        <div class="pomo-controls">
+            <button onclick="startPomo()" class="pomo-btn pomo-btn-start" id="btnPomoStart" data-i18n="start">Start</button>
+            <button onclick="stopPomo()" class="pomo-btn pomo-btn-stop" id="btnPomoStop" data-i18n="stop">Stop</button>
+        </div>
+        <div class="pomo-settings">
+            <span class="text-xs text-[var(--text-secondary)]" data-i18n="timerMin">Min:</span>
+            <input type="number" id="pomoDuration" class="pomo-input" value="25" min="1" max="120">
+            <button onclick="resetPomo()" class="pomo-btn pomo-btn-reset hover:text-[var(--text-primary)]" title="Reset"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+        </div>
+    </div>
+
+    <!-- Zen Timer Float (Visible in Zen Mode) -->
+    <div id="zenTimerDisplay" class="zen-timer-display">
+        <span id="zenPomoTime">25:00</span>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <div class="main-wrapper">
+        <!-- LEFT SIDEBAR: Structure -->
+        <aside id="leftSidebar" class="sidebar w-72 flex-shrink-0 flex flex-col glass-panel z-20 transition-all duration-500">
+            <!-- Header -->
+            <div class="h-14 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <i data-lucide="book-open" class="w-4 h-4 text-[var(--accent-color)]"></i>
+                    <input id="projectTitleInput" type="text" class="bg-transparent border-none outline-none font-bold text-sm text-[var(--text-primary)] w-full truncate placeholder-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--accent-color)] rounded px-1" value="無題の物語">
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="px-3 py-2 flex items-center justify-between text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                <span data-i18n="structure">Structure</span>
+                <div class="flex gap-1">
+                    <button onclick="addChapter()" class="p-1.5 rounded hover:bg-[var(--border-color)] hover:text-[var(--accent-color)] transition-colors" title="Ctrl+Shift+N">
+                        <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="addEpisode()" class="p-1.5 rounded hover:bg-[var(--border-color)] hover:text-[var(--accent-color)] transition-colors" title="Ctrl+N">
+                        <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tree -->
+            <div id="treeContainer" class="flex-1 overflow-y-auto px-2 pb-4 space-y-1 custom-scroll">
+                <!-- Dynamic Content -->
+            </div>
+        </aside>
+
+        <!-- CENTER: Editor -->
+        <main id="mainContainer" class="editor-container relative">
+            
+            <!-- Floating Toolbar -->
+            <div class="toolbar-float absolute top-6 left-1/2 transform -translate-x-1/2 rounded-full px-5 py-2 flex items-center gap-4 z-30">
+                <button onclick="toggleZenMode()" class="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Ctrl+/">
+                    <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
+                </button>
+                <div class="w-px h-3 bg-[var(--border-color)]"></div>
+                <button onclick="toggleOrientation()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <i data-lucide="file-type" class="w-4 h-4"></i>
+                </button>
+                <button onclick="toggleLinedPaper()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <i data-lucide="align-justify" class="w-4 h-4"></i>
+                </button>
+                <button onclick="toggleReaderMode()" id="btnReaderMode" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <i data-lucide="glasses" class="w-4 h-4"></i>
+                </button>
+                <div class="w-px h-3 bg-[var(--border-color)]"></div>
+                <div class="flex gap-1 font-mincho text-xs font-bold">
+                    <button onclick="insertText('｜', '《》')" class="px-2 py-1 rounded hover:bg-[var(--border-color)] text-[var(--text-primary)]" data-i18n="ruby">ルビ</button>
+                    <button onclick="insertText('——')" class="px-2 py-1 rounded hover:bg-[var(--border-color)] text-[var(--text-primary)]">——</button>
+                    <button onclick="insertText('……')" class="px-2 py-1 rounded hover:bg-[var(--border-color)] text-[var(--text-primary)]">……</button>
+                </div>
+            </div>
+
+            <div class="editor-scroll-area custom-scroll" id="editorScroll">
+                <div id="editorSheet" class="editor-sheet">
+                    <textarea id="mainEditor" class="main-editor" placeholder="..." spellcheck="false"></textarea>
+                </div>
+            </div>
+
+            <!-- Exit Zen -->
+            <button onclick="toggleZenMode()" class="zen-exit fixed top-6 right-6 p-3 rounded-full bg-[var(--bg-sidebar)] backdrop-blur shadow-lg opacity-0 pointer-events-none transform -translate-y-4 transition-all duration-500 z-50 hover:scale-105 text-[var(--text-primary)]">
+                <i data-lucide="minimize-2" class="w-5 h-5"></i>
+            </button>
+        </main>
+
+        <!-- RIGHT SIDEBAR: Tools -->
+        <aside id="rightSidebar" class="sidebar sidebar-right w-80 flex-shrink-0 flex flex-col border-l border-[var(--border-color)] z-20 transition-all duration-500 glass-panel">
+            <!-- Tabs -->
+            <div class="flex border-b border-[var(--border-color)] flex-shrink-0">
+                <button onclick="switchTab('chars')" id="tab-chars" class="flex-1 py-3 text-[10px] font-bold tracking-wider text-[var(--accent-color)] border-b-2 border-[var(--accent-color)] uppercase transition-colors">Chars</button>
+                <button onclick="switchTab('plot')" id="tab-plot" class="flex-1 py-3 text-[10px] font-bold tracking-wider text-[var(--text-secondary)] border-b-2 border-transparent uppercase transition-colors hover:text-[var(--text-primary)]">Plot</button>
+                <button onclick="switchTab('info')" id="tab-info" class="flex-1 py-3 text-[10px] font-bold tracking-wider text-[var(--text-secondary)] border-b-2 border-transparent uppercase transition-colors hover:text-[var(--text-primary)]">Info</button>
+            </div>
+
+            <div class="flex-1 overflow-hidden relative bg-[var(--bg-app)]/30">
+                
+                <!-- CHARACTERS TAB -->
+                <div id="content-chars" class="absolute inset-0 flex flex-col">
+                    <div class="p-2 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-sidebar)]">
+                        <span class="text-xs font-bold text-[var(--text-secondary)] pl-2" data-i18n="castList">Cast List</span>
+                        <button onclick="addCharacter()" class="p-1 hover:text-[var(--accent-color)]"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                    <div id="charList" class="flex-1 overflow-y-auto p-2 space-y-2 custom-scroll">
+                        <!-- Char Items -->
+                    </div>
+                </div>
+
+                <!-- PLOT TAB -->
+                <div id="content-plot" class="hidden absolute inset-0 overflow-y-auto p-4 space-y-4 custom-scroll">
+                    <div class="space-y-1"><label class="text-[10px] font-bold text-[var(--text-secondary)] uppercase" data-i18n="intro">Introduction</label><textarea id="plotKi" class="w-full h-24 p-3 text-sm bg-[var(--bg-editor)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-1 focus:ring-[var(--accent-color)] outline-none transition-shadow"></textarea></div>
+                    <div class="space-y-1"><label class="text-[10px] font-bold text-[var(--text-secondary)] uppercase" data-i18n="dev">Development</label><textarea id="plotSho" class="w-full h-24 p-3 text-sm bg-[var(--bg-editor)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-1 focus:ring-[var(--accent-color)] outline-none transition-shadow"></textarea></div>
+                    <div class="space-y-1"><label class="text-[10px] font-bold text-[var(--text-secondary)] uppercase" data-i18n="twist">Twist</label><textarea id="plotTen" class="w-full h-24 p-3 text-sm bg-[var(--bg-editor)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-1 focus:ring-[var(--accent-color)] outline-none transition-shadow"></textarea></div>
+                    <div class="space-y-1"><label class="text-[10px] font-bold text-[var(--text-secondary)] uppercase" data-i18n="outro">Conclusion</label><textarea id="plotKetsu" class="w-full h-24 p-3 text-sm bg-[var(--bg-editor)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-1 focus:ring-[var(--accent-color)] outline-none transition-shadow"></textarea></div>
+                    <div class="h-8"></div>
+                </div>
+
+                <!-- INFO TAB -->
+                <div id="content-info" class="hidden absolute inset-0 overflow-y-auto p-6 space-y-6 custom-scroll">
+                    <div class="text-center py-4">
+                        <div class="text-5xl font-light font-gothic text-[var(--text-primary)] tracking-tight" id="statCountBig">0</div>
+                        <div class="text-[10px] text-[var(--text-secondary)] uppercase mt-2 tracking-widest" data-i18n="totalChars">Total Characters</div>
+                    </div>
+                    
+                    <div class="space-y-3 bg-[var(--bg-editor)] p-4 rounded-xl border border-[var(--border-color)] shadow-sm">
+                        <h3 class="text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2" data-i18n="metrics">Metrics</h3>
+                        <div class="flex justify-between text-sm items-center"><span class="text-[var(--text-secondary)]" data-i18n="manuscript">Manuscript Pages</span> <span id="statPaper" class="font-bold font-mono">0</span></div>
+                        <div class="flex justify-between text-sm items-center"><span class="text-[var(--text-secondary)]" data-i18n="readTime">Read Time</span> <span id="statTime" class="font-bold font-mono">0 min</span></div>
+                        <div class="flex justify-between text-sm items-center"><span class="text-[var(--text-secondary)]" data-i18n="lines">Lines</span> <span id="statLines" class="font-bold font-mono">0</span></div>
+                    </div>
+
+                    <div class="space-y-3 bg-[var(--bg-editor)] p-4 rounded-xl border border-[var(--border-color)] shadow-sm">
+                        <h3 class="text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2" data-i18n="session">Session</h3>
+                         <div class="flex justify-between text-sm items-center"><span class="text-[var(--text-secondary)]" data-i18n="currentWrite">Current Session</span> <span id="sessionCount" class="font-bold font-mono text-[var(--accent-color)]">+0</span></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Status Bar (Moved Bottom) -->
+    <footer id="appStatusBar" class="app-status-bar">
+        <div class="status-section">
+            <button class="status-item hover:text-[var(--accent-color)] transition-colors" onclick="toggleSettings()"><i data-lucide="menu" class="w-3.5 h-3.5"></i></button>
+            <div class="h-3 w-px bg-[var(--border-color)]"></div>
+            <span id="saveStatus" class="opacity-70">Synced</span>
+        </div>
+        <div class="status-section">
+            <div id="pomoTimerBtn" class="status-item" onclick="togglePomoWindow()">
+                <i data-lucide="timer" class="w-3 h-3"></i>
+                <span id="pomoTimeStatus">25:00</span>
+            </div>
+            <div class="h-3 w-px bg-[var(--border-color)]"></div>
+            <span id="clockDisplay" class="tabular-nums opacity-70">00:00</span>
+        </div>
+    </footer>
+
+    <!-- Context Menu -->
+    <div id="contextMenu">
+        <div class="ctx-item" onclick="ctxAction('rename')"><i data-lucide="edit-2" class="w-3 h-3"></i> <span data-i18n="rename">Rename</span></div>
+        <div class="ctx-item" onclick="ctxAction('duplicate')"><i data-lucide="copy" class="w-3 h-3"></i> <span data-i18n="duplicate">Duplicate</span></div>
+        <div class="border-t border-[var(--border-color)] my-1"></div>
+        <div class="ctx-item danger" onclick="ctxAction('delete')"><i data-lucide="trash-2" class="w-3 h-3"></i> <span data-i18n="delete">Delete</span></div>
+    </div>
+
+    <!-- Custom Prompt Modal -->
+    <div id="promptModal" class="modal-overlay">
+        <div class="modal-container">
+            <h3 class="modal-title" id="promptTitle">Input</h3>
+            <input type="text" id="promptInput" class="modal-input" placeholder="">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="promptCancel" data-i18n="cancel">Cancel</button>
+                <button class="btn btn-primary" id="promptConfirm" data-i18n="ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-container">
+            <h3 class="modal-title" id="confirmTitle">Confirm</h3>
+            <p id="confirmMessage" class="modal-msg">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="confirmCancel" data-i18n="cancel">Cancel</button>
+                <button class="btn btn-danger" id="confirmOk" data-i18n="yes">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input for Import -->
+    <input type="file" id="importFile" hidden accept=".json">
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-[var(--bg-editor)] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[80vh]" id="settingsContent">
+            
+            <div class="flex justify-between items-center p-4 border-b border-[var(--border-color)] bg-[var(--bg-sidebar)]">
+                <h2 class="text-sm font-bold font-gothic" data-i18n="preferences">Preferences</h2>
+                <button onclick="toggleSettings()" class="p-1 rounded-full hover:bg-[var(--border-color)]"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                
+                <!-- General -->
+                <section>
+                    <h3 class="text-xs font-bold text-[var(--text-secondary)] uppercase mb-3" data-i18n="general">General</h3>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-[var(--text-secondary)]" data-i18n="language">LANGUAGE</label>
+                        <div class="flex bg-[var(--border-color)] p-1 rounded-lg">
+                            <button onclick="setLang('ja')" class="flex-1 py-1.5 text-xs rounded-md transition-all" id="lang-ja">日本語</button>
+                            <button onclick="setLang('en')" class="flex-1 py-1.5 text-xs rounded-md transition-all" id="lang-en">English</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Appearance -->
+                <section>
+                    <h3 class="text-xs font-bold text-[var(--text-secondary)] uppercase mb-3" data-i18n="appearance">Appearance</h3>
+                    <div class="flex gap-4 mb-4">
+                        <div class="flex-1 space-y-2">
+                            <label class="text-[10px] font-bold text-[var(--text-secondary)]" data-i18n="theme">THEME</label>
+                            <div class="flex bg-[var(--border-color)] p-1 rounded-lg">
+                                <button onclick="setTheme('light')" class="flex-1 py-1.5 text-xs rounded-md transition-all" id="btn-light">Light</button>
+                                <button onclick="setTheme('dark')" class="flex-1 py-1.5 text-xs rounded-md transition-all" id="btn-dark">Dark</button>
+                            </div>
+                        </div>
+                         <div class="flex-1 space-y-2">
+                             <label class="text-[10px] font-bold text-[var(--text-secondary)]" data-i18n="readerMode">READER MODE</label>
+                             <div class="flex items-center h-[34px]">
+                                 <button onclick="toggleReaderMode()" id="btn-reader-toggle" class="w-full h-full rounded-lg border border-[var(--border-color)] text-xs font-medium hover:border-[var(--accent-color)] transition-all">Toggle</button>
+                             </div>
+                         </div>
+                    </div>
+                </section>
+
+                <!-- Typography -->
+                <section>
+                    <h3 class="text-xs font-bold text-[var(--text-secondary)] uppercase mb-3" data-i18n="typography">Typography</h3>
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-[var(--text-secondary)]" data-i18n="fontFamily">FONT FAMILY</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="setFont('mincho')" class="setting-btn p-2 border border-[var(--border-color)] rounded-lg text-sm font-mincho hover:border-[var(--accent-color)] transition-all" id="font-mincho" data-i18n="fontMincho">Mincho</button>
+                                <button onclick="setFont('gothic')" class="setting-btn p-2 border border-[var(--border-color)] rounded-lg text-sm font-gothic hover:border-[var(--accent-color)] transition-all" id="font-gothic" data-i18n="fontGothic">Gothic</button>
+                                <button onclick="setFont('hand')" class="setting-btn p-2 border border-[var(--border-color)] rounded-lg text-sm font-hand hover:border-[var(--accent-color)] transition-all" id="font-hand" data-i18n="fontHand">Hand</button>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                             <div class="flex justify-between"><label class="text-[10px] font-bold text-[var(--text-secondary)]" data-i18n="size">SIZE</label> <span id="sizeVal" class="text-xs font-mono">18px</span></div>
+                             <input type="range" min="12" max="36" value="18" step="1" oninput="setSize(this.value)" class="w-full accent-[var(--accent-color)] h-1 bg-[var(--border-color)] rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Data -->
+                 <section>
+                    <h3 class="text-xs font-bold text-[var(--text-secondary)] uppercase mb-3" data-i18n="data">Data Management</h3>
+                    <div class="flex gap-2">
+                        <button onclick="exportJSON()" class="flex-1 py-2 text-xs border border-[var(--border-color)] rounded-lg hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] transition-colors" data-i18n="backup">Backup (JSON)</button>
+                        <button onclick="triggerImport()" class="flex-1 py-2 text-xs border border-[var(--border-color)] rounded-lg hover:bg-[var(--border-color)] transition-colors" data-i18n="import">Import (JSON)</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character Modal -->
+    <div id="charModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-[var(--bg-editor)] w-full max-w-md rounded-xl shadow-2xl p-6 transform scale-95 transition-transform duration-300">
+            <h3 class="text-lg font-bold mb-4 font-mincho" data-i18n="editChar">Edit Character</h3>
+            <div class="space-y-3">
+                <input id="charNameInput" placeholder="Name" class="w-full p-2 bg-[var(--bg-app)] rounded border border-[var(--border-color)] outline-none focus:border-[var(--accent-color)]">
+                <input id="charRoleInput" placeholder="Role" class="w-full p-2 bg-[var(--bg-app)] rounded border border-[var(--border-color)] outline-none focus:border-[var(--accent-color)] text-sm">
+                <textarea id="charDescInput" placeholder="Description..." class="w-full h-32 p-2 bg-[var(--bg-app)] rounded border border-[var(--border-color)] outline-none focus:border-[var(--accent-color)] text-sm resize-none"></textarea>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeCharModal()" class="px-4 py-2 text-xs text-[var(--text-secondary)]" data-i18n="cancel">Cancel</button>
+                <button onclick="saveCharacter()" class="px-4 py-2 bg-[var(--accent-color)] text-white rounded-lg text-xs font-bold shadow-sm hover:opacity-90" data-i18n="save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Translations ---
+        const i18n = {
+            ja: {
+                structure: "構成",
+                preferences: "設定",
+                general: "全般",
+                language: "言語",
+                appearance: "外観",
+                theme: "テーマ",
+                readerMode: "リーダーモード",
+                typography: "タイポグラフィ",
+                fontFamily: "フォント",
+                fontMincho: "明朝体",
+                fontGothic: "ゴシック体",
+                fontHand: "手書き",
+                size: "文字サイズ",
+                data: "データ管理",
+                backup: "バックアップ (JSON)",
+                import: "復元 (JSON)",
+                importDesc: "バックアップから復元",
+                castList: "登場人物",
+                intro: "起",
+                dev: "承",
+                twist: "転",
+                outro: "結",
+                totalChars: "総文字数",
+                metrics: "指標",
+                manuscript: "原稿用紙 (400字)",
+                readTime: "読了時間",
+                lines: "行数",
+                session: "セッション",
+                currentWrite: "今回の執筆",
+                ruby: "ルビ",
+                rename: "名前を変更",
+                duplicate: "複製",
+                delete: "削除",
+                editChar: "キャラクター編集",
+                save: "保存",
+                cancel: "キャンセル",
+                ok: "OK",
+                yes: "はい",
+                newProject: "新規プロジェクト",
+                newProjectDesc: "まっさらな状態から始める",
+                continue: "続きから",
+                settingsDesc: "表示や設定を変更",
+                newChapter: "新規章",
+                newEpisode: "新規話",
+                promptName: "名前を入力してください",
+                confirmDelete: "本当に削除しますか？",
+                confirmImport: "現在のデータは上書きされます。インポートしてよろしいですか？",
+                importSuccess: "復元が完了しました",
+                importError: "ファイルの読み込みに失敗しました",
+                untitled: "無題の物語",
+                timerMin: "時間(分):",
+                start: "開始",
+                stop: "停止"
+            },
+            en: {
+                structure: "Structure",
+                preferences: "Preferences",
+                general: "General",
+                language: "Language",
+                appearance: "Appearance",
+                theme: "Theme",
+                readerMode: "Reader Mode",
+                typography: "Typography",
+                fontFamily: "Font Family",
+                fontMincho: "Mincho",
+                fontGothic: "Gothic",
+                fontHand: "Hand",
+                size: "Font Size",
+                data: "Data Management",
+                backup: "Backup (JSON)",
+                import: "Import (JSON)",
+                importDesc: "Restore from backup",
+                castList: "Cast List",
+                intro: "Introduction",
+                dev: "Development",
+                twist: "Twist",
+                outro: "Conclusion",
+                totalChars: "Total Characters",
+                metrics: "Metrics",
+                manuscript: "Manuscript Pages",
+                readTime: "Read Time",
+                lines: "Lines",
+                session: "Session",
+                currentWrite: "Current Session",
+                ruby: "Ruby",
+                rename: "Rename",
+                duplicate: "Duplicate",
+                delete: "Delete",
+                editChar: "Edit Character",
+                save: "Save",
+                cancel: "Cancel",
+                ok: "OK",
+                yes: "Yes",
+                newProject: "New Project",
+                newProjectDesc: "Start from scratch",
+                continue: "Continue",
+                settingsDesc: "Configure appearance",
+                newChapter: "New Chapter",
+                newEpisode: "New Episode",
+                promptName: "Enter name",
+                confirmDelete: "Are you sure you want to delete this?",
+                confirmImport: "Current data will be overwritten. Proceed with import?",
+                importSuccess: "Project imported successfully",
+                importError: "Failed to import file",
+                untitled: "Untitled Story",
+                timerMin: "Min:",
+                start: "Start",
+                stop: "Stop"
+            }
+        };
+
+        // --- State ---
+        const state = {
+            project: {
+                title: "Untitled Story",
+                chapters: [],
+                characters: [],
+                plot: { k: "", s: "", t: "", k: "" }
+            },
+            ui: {
+                chapterId: null,
+                episodeId: null,
+                theme: "light",
+                lang: "ja", 
+                readerMode: false,
+                font: "mincho",
+                size: 18,
+                vertical: false,
+                lined: false,
+                zen: false
+            },
+            shortcuts: {
+                "save": "ctrl+s",
+                "new_ep": "ctrl+n",
+                "new_ch": "ctrl+shift+n",
+                "zen": "ctrl+/",
+                "toggle_sidebar": "ctrl+b",
+                "reader": "alt+r"
+            },
+            sessionStartCount: 0
+        };
+
+        // Timer State
+        const pomo = {
+            timeLeft: 25 * 60,
+            isActive: false,
+            interval: null,
+            duration: 25
+        };
+
+        const els = {
+            editor: document.getElementById('mainEditor'),
+            tree: document.getElementById('treeContainer'),
+            modal: document.getElementById('settingsModal'),
+            modalContent: document.getElementById('settingsContent'),
+            ctxMenu: document.getElementById('contextMenu'),
+            // Modals
+            promptModal: document.getElementById('promptModal'),
+            promptInput: document.getElementById('promptInput'),
+            confirmModal: document.getElementById('confirmModal'),
+            welcomeModal: document.getElementById('welcomeModal'),
+            toastContainer: document.getElementById('toastContainer'),
+            pomoWindow: document.getElementById('pomoWindow')
+        };
+
+        let ctxTarget = null;
+        let editingCharId = null;
+        let promptCallback = null;
+        let confirmCallback = null;
+
+        // --- Init ---
+        function init() {
+            loadData();
+            
+            // Check Data Existence for Welcome Screen
+            if (state.project.chapters.length > 0) {
+                document.getElementById('lastProjectName').innerText = state.project.title || t('untitled');
+            } else {
+                state.project.title = t('untitled');
+            }
+
+            // Init UI
+            updateLanguage();
+            applyStyles();
+            lucide.createIcons();
+            
+            // Sync Lang Selector in Welcome
+            const langSelect = document.querySelector('.lang-select');
+            if(langSelect) langSelect.value = state.ui.lang;
+
+            // Start Clock
+            setInterval(updateClock, 1000);
+            updateClock();
+            updatePomoDisplay();
+
+            // Setup Listeners
+            setupShortcuts();
+            setupDragAndDrop();
+            setupModalListeners();
+            setupInputs();
+        }
+
+        // --- Welcome Logic ---
+        function closeWelcome() {
+            els.welcomeModal.classList.remove('active');
+            if (!state.ui.episodeId && state.project.chapters.length > 0) {
+                const firstEp = state.project.chapters[0].episodes[0];
+                if(firstEp) selectEpisode(firstEp.id);
+            } else if (state.ui.episodeId) {
+                loadEpisode(state.ui.episodeId);
+            }
+            renderTree();
+            renderCharacters();
+            switchTab('chars');
+            state.sessionStartCount = els.editor.value.replace(/\s/g, '').length;
+            updateStats();
+        }
+
+        function startNewProject() {
+            showConfirm(t('confirmImport'), (confirmed) => { 
+                if(confirmed) {
+                    state.project = {
+                        title: t('untitled'),
+                        chapters: [],
+                        characters: [],
+                        plot: { k: "", s: "", t: "", k: "" }
+                    };
+                    const id = 'c' + Date.now();
+                    const eid = 'e' + Date.now();
+                    state.project.chapters.push({ 
+                        id, 
+                        title: state.ui.lang === 'ja' ? "第一章" : "Chapter 1", 
+                        isOpen: true, 
+                        episodes: [{ id: eid, title: state.ui.lang === 'ja' ? "はじまり" : "Episode 1", content: "" }] 
+                    });
+                    state.ui.episodeId = eid;
+                    saveData();
+                    closeWelcome();
+                    showToast(t('newChapter'), 'success');
+                }
+            });
+        }
+
+        function loadLastProject() {
+            if(state.project.chapters.length === 0) startNewProject(); 
+            else closeWelcome();
+        }
+
+        // --- Timer Logic ---
+        function updateClock() {
+            const now = new Date();
+            const str = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clockDisplay').innerText = str;
+        }
+
+        function togglePomoWindow() {
+            if(els.pomoWindow.style.display === 'flex') {
+                els.pomoWindow.style.display = 'none';
+                els.pomoWindow.classList.remove('active');
+            } else {
+                els.pomoWindow.style.display = 'flex';
+                // Trigger animation
+                setTimeout(() => els.pomoWindow.classList.add('active'), 10);
+            }
+        }
+
+        function startPomo() {
+            if (pomo.isActive) return;
+            pomo.isActive = true;
+            document.getElementById('btnPomoStart').style.opacity = '0.5';
+            document.getElementById('pomoDuration').disabled = true;
+            
+            pomo.interval = setInterval(() => {
+                pomo.timeLeft--;
+                if (pomo.timeLeft <= 0) {
+                    stopPomo();
+                    showToast("Time's up!", 'info');
+                    resetPomo();
+                }
+                updatePomoDisplay();
+            }, 1000);
+        }
+
+        function stopPomo() {
+            clearInterval(pomo.interval);
+            pomo.isActive = false;
+            document.getElementById('btnPomoStart').style.opacity = '1';
+            document.getElementById('pomoDuration').disabled = false;
+        }
+
+        function resetPomo() {
+            stopPomo();
+            const inputVal = parseInt(document.getElementById('pomoDuration').value) || 25;
+            pomo.duration = inputVal;
+            pomo.timeLeft = pomo.duration * 60;
+            updatePomoDisplay();
+        }
+
+        function updatePomoDisplay() {
+            const m = Math.floor(pomo.timeLeft / 60).toString().padStart(2, '0');
+            const s = (pomo.timeLeft % 60).toString().padStart(2, '0');
+            const str = `${m}:${s}`;
+            document.getElementById('pomoDisplay').innerText = str;
+            document.getElementById('pomoTimeStatus').innerText = str;
+            document.getElementById('zenPomoTime').innerText = str;
+        }
+
+        document.getElementById('pomoDuration').addEventListener('change', (e) => {
+            if(!pomo.isActive) resetPomo();
+        });
+
+        // --- Toast System ---
+        function showToast(msg, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = 'info';
+            if(type === 'success') icon = 'check-circle';
+            if(type === 'error') icon = 'alert-triangle';
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i><span>${msg}</span>`;
+            els.toastContainer.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- Localization Helpers ---
+        function t(key) { return i18n[state.ui.lang][key] || key; }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.innerText = t(key);
+            });
+            document.getElementById('mainEditor').placeholder = state.ui.lang === 'ja' ? "物語を、ここから……" : "Start your story here...";
+            
+            // Buttons
+            document.getElementById('lang-ja').className = `flex-1 py-1.5 text-xs rounded-md transition-all ${state.ui.lang === 'ja' ? 'bg-white shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`;
+            document.getElementById('lang-en').className = `flex-1 py-1.5 text-xs rounded-md transition-all ${state.ui.lang === 'en' ? 'bg-white shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`;
+            
+            if(state.ui.theme === 'dark') {
+                 if(state.ui.lang === 'ja') document.getElementById('lang-ja').classList.add('bg-white/20', 'text-white');
+                 if(state.ui.lang === 'en') document.getElementById('lang-en').classList.add('bg-white/20', 'text-white');
+            }
+        }
+
+        function setLang(l) {
+            state.ui.lang = l;
+            updateLanguage();
+            const langSelect = document.querySelector('.lang-select');
+            if(langSelect) langSelect.value = l;
+            renderTree(); 
+            saveData();
+        }
+
+        // --- Custom Modals ---
+        function setupModalListeners() {
+            document.getElementById('promptCancel').onclick = () => {
+                els.promptModal.classList.remove('active');
+                if(promptCallback) promptCallback(null);
+            };
+            document.getElementById('promptConfirm').onclick = () => {
+                els.promptModal.classList.remove('active');
+                if(promptCallback) promptCallback(els.promptInput.value);
+            };
+            els.promptInput.onkeydown = (e) => {
+                if(e.key === 'Enter') document.getElementById('promptConfirm').click();
+                if(e.key === 'Escape') document.getElementById('promptCancel').click();
+            };
+            document.getElementById('confirmCancel').onclick = () => {
+                els.confirmModal.classList.remove('active');
+                if(confirmCallback) confirmCallback(false);
+            };
+            document.getElementById('confirmOk').onclick = () => {
+                els.confirmModal.classList.remove('active');
+                if(confirmCallback) confirmCallback(true);
+            };
+        }
+
+        function showPrompt(title, placeholder, callback, defaultValue = "") {
+            document.getElementById('promptTitle').innerText = title;
+            els.promptInput.placeholder = placeholder;
+            els.promptInput.value = defaultValue;
+            promptCallback = callback;
+            els.promptModal.classList.add('active');
+            setTimeout(() => els.promptInput.focus(), 50);
+        }
+
+        function showConfirm(message, callback) {
+            document.getElementById('confirmTitle').innerText = t('ok') + '?';
+            document.getElementById('confirmMessage').innerText = message;
+            confirmCallback = callback;
+            els.confirmModal.classList.add('active');
+        }
+
+        // --- Import/Export ---
+        function triggerImport() {
+            showConfirm(t('confirmImport'), (confirmed) => {
+                if(confirmed) {
+                    document.getElementById('importFile').click();
+                }
+            });
+        }
+
+        function handleImportFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (!data.project || !data.ui) throw new Error("Invalid Format");
+                    state.project = data.project;
+                    state.ui = data.ui;
+                    if(data.shortcuts) state.shortcuts = data.shortcuts;
+                    saveData();
+                    closeWelcome();
+                    init(); 
+                    showToast(t('importSuccess'), 'success');
+                } catch (err) {
+                    showToast(t('importError'), 'error');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; 
+        }
+
+        // --- Core Logic ---
+        function addChapter() {
+            showPrompt(t('newChapter'), t('promptName'), (name) => {
+                if (!name) return;
+                const id = 'c' + Date.now();
+                const newCh = { id, title: name, isOpen: true, episodes: [] };
+                state.project.chapters.push(newCh);
+                renderTree();
+                setTimeout(() => {
+                    showPrompt(t('newEpisode'), t('promptName'), (epName) => {
+                        if(epName) addEpisodeTo(id, null, epName);
+                        saveData();
+                    });
+                }, 200);
+            });
+        }
+
+        function addEpisode() {
+            let ch = state.project.chapters.find(c => c.episodes.some(e => e.id === state.ui.episodeId));
+            if(!ch && state.project.chapters.length) ch = state.project.chapters[0];
+            if(ch) {
+                showPrompt(t('newEpisode'), t('promptName'), (name) => {
+                    if(!name) return;
+                    addEpisodeTo(ch.id, null, name);
+                });
+            } else {
+                showToast("Create a chapter first.", 'error');
+            }
+        }
+
+        function addEpisodeTo(cid, e, name) {
+            if(e) e.stopPropagation();
+            const doAdd = (finalName) => {
+                const ch = state.project.chapters.find(c => c.id === cid);
+                const eid = 'e' + Date.now();
+                ch.episodes.push({ id: eid, title: finalName, content: "" });
+                ch.isOpen = true;
+                renderTree();
+                selectEpisode(eid);
+                saveData();
+            };
+            if(name) {
+                doAdd(name);
+            } else {
+                showPrompt(t('newEpisode'), t('promptName'), (inputName) => {
+                    if(inputName) doAdd(inputName);
+                });
+            }
+        }
+
+        function selectEpisode(id) {
+            state.ui.episodeId = id;
+            loadEpisode(id);
+            renderTree();
+            saveData();
+        }
+
+        function loadEpisode(id) {
+            const ep = getCurrentEpisode();
+            if(ep) {
+                els.editor.value = ep.content;
+                updateStats();
+                const ch = state.project.chapters.find(c => c.episodes.includes(ep));
+                if(ch) ch.isOpen = true;
+                state.ui.chapterId = ch ? ch.id : null;
+            }
+        }
+
+        function getCurrentEpisode() {
+            for(const c of state.project.chapters) {
+                const e = c.episodes.find(x => x.id === state.ui.episodeId);
+                if(e) return e;
+            }
+            return null;
+        }
+
+        // --- UI Logic ---
+        function renderTree() {
+            const html = state.project.chapters.map(ch => `
+                <div class="chapter-group" data-id="${ch.id}">
+                    <div class="tree-item flex items-center px-2 py-1.5 gap-2 text-sm text-[var(--text-primary)] font-medium cursor-pointer" 
+                         onclick="toggleChapter('${ch.id}')"
+                         oncontextmenu="showCtxMenu(event, 'chapter', '${ch.id}')">
+                        <i data-lucide="${ch.isOpen ? 'folder-open' : 'folder'}" class="w-3.5 h-3.5 text-[var(--accent-color)] opacity-80"></i>
+                        <span class="flex-1 truncate">${ch.title}</span>
+                        <button onclick="addEpisodeTo('${ch.id}', event)" class="p-1 hover:text-[var(--accent-color)] opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                    </div>
+                    <div class="episode-list pl-4 space-y-0.5 ${ch.isOpen ? '' : 'hidden'}" id="list-${ch.id}">
+                        ${ch.episodes.map(ep => `
+                            <div class="tree-item flex items-center px-2 py-1.5 gap-2 text-sm text-[var(--text-secondary)] cursor-pointer ${state.ui.episodeId === ep.id ? 'active' : ''}" 
+                                 data-id="${ep.id}"
+                                 onclick="selectEpisode('${ep.id}')"
+                                 oncontextmenu="showCtxMenu(event, 'episode', '${ep.id}')">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 opacity-60"></i>
+                                <span class="flex-1 truncate">${ep.title}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+            els.tree.innerHTML = html;
+            lucide.createIcons();
+            setupDragAndDrop();
+        }
+
+        function toggleChapter(cid) {
+            const ch = state.project.chapters.find(c => c.id === cid);
+            if(ch) {
+                ch.isOpen = !ch.isOpen;
+                renderTree();
+            }
+        }
+
+        function setupDragAndDrop() {
+            new Sortable(els.tree, {
+                animation: 150,
+                ghostClass: 'ghost-class',
+                onEnd: (evt) => {
+                    const item = state.project.chapters.splice(evt.oldIndex, 1)[0];
+                    state.project.chapters.splice(evt.newIndex, 0, item);
+                    saveData();
+                }
+            });
+            state.project.chapters.forEach(ch => {
+                const el = document.getElementById(`list-${ch.id}`);
+                if(el) {
+                    new Sortable(el, {
+                        group: 'episodes',
+                        animation: 150,
+                        ghostClass: 'ghost-class',
+                        onEnd: (evt) => {
+                            updateStructureFromDOM();
+                        }
+                    });
+                }
+            });
+        }
+
+        function updateStructureFromDOM() {
+            const newChapters = [];
+            const chEls = els.tree.querySelectorAll('.chapter-group');
+            chEls.forEach(chEl => {
+                const cid = chEl.getAttribute('data-id');
+                const oldCh = state.project.chapters.find(c => c.id === cid);
+                const epEls = chEl.querySelectorAll('.episode-list > div');
+                const newEps = [];
+                epEls.forEach(epEl => {
+                    const eid = epEl.getAttribute('data-id');
+                    let foundEp = null;
+                    state.project.chapters.forEach(c => {
+                        const e = c.episodes.find(ep => ep.id === eid);
+                        if(e) foundEp = e;
+                    });
+                    if(foundEp) newEps.push(foundEp);
+                });
+                oldCh.episodes = newEps;
+                newChapters.push(oldCh);
+            });
+            state.project.chapters = newChapters;
+            saveData();
+        }
+
+        // --- Context Menu ---
+        function showCtxMenu(e, type, id) {
+            e.preventDefault();
+            e.stopPropagation();
+            ctxTarget = { type, id };
+            const m = els.ctxMenu;
+            m.style.display = 'block';
+            m.style.left = `${e.pageX}px`;
+            m.style.top = `${e.pageY}px`;
+            if (e.pageY + m.offsetHeight > window.innerHeight) {
+                m.style.top = `${e.pageY - m.offsetHeight}px`;
+            }
+        }
+
+        function ctxAction(action) {
+            const { type, id } = ctxTarget;
+            els.ctxMenu.style.display = 'none';
+            if (action === 'rename') {
+                const item = type === 'chapter' ? state.project.chapters.find(c => c.id === id) : getCurrentEpisodeById(id);
+                showPrompt(t('rename'), t('promptName'), (newName) => {
+                    if (newName) {
+                        item.title = newName;
+                        renderTree();
+                        saveData();
+                    }
+                }, item.title);
+            }
+            if (action === 'delete') {
+                showConfirm(t('confirmDelete'), (confirmed) => {
+                    if(confirmed) {
+                        if(type === 'chapter') {
+                            state.project.chapters = state.project.chapters.filter(c => c.id !== id);
+                        } else {
+                            state.project.chapters.forEach(c => {
+                                c.episodes = c.episodes.filter(e => e.id !== id);
+                            });
+                        }
+                        renderTree();
+                        saveData();
+                    }
+                });
+            }
+            if (action === 'duplicate') {
+                if (type === 'episode') {
+                    const ep = getCurrentEpisodeById(id);
+                    const ch = state.project.chapters.find(c => c.episodes.includes(ep));
+                    const newEp = JSON.parse(JSON.stringify(ep));
+                    newEp.id = 'e' + Date.now();
+                    newEp.title += " (Copy)";
+                    ch.episodes.push(newEp);
+                    renderTree();
+                    saveData();
+                }
+            }
+        }
+
+        function getCurrentEpisodeById(id) {
+            for(const c of state.project.chapters) {
+                const e = c.episodes.find(x => x.id === id);
+                if(e) return e;
+            }
+            return null;
+        }
+
+        // --- Character Logic ---
+        function renderCharacters() {
+            const list = document.getElementById('charList');
+            list.innerHTML = state.project.characters.map(c => `
+                <div class="p-3 bg-[var(--bg-editor)] rounded-lg border border-[var(--border-color)] shadow-sm hover:border-[var(--accent-color)] cursor-pointer group transition-all" onclick="editCharacter('${c.id}')">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-sm font-gothic">${c.name}</span>
+                        <button onclick="deleteCharacter('${c.id}', event)" class="opacity-0 group-hover:opacity-100 text-[var(--text-secondary)] hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                    </div>
+                    <div class="text-[10px] font-bold text-[var(--accent-color)] uppercase tracking-wider mb-1">${c.role}</div>
+                    <div class="text-xs text-[var(--text-secondary)] line-clamp-2">${c.desc}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addCharacter() {
+            editingCharId = null;
+            document.getElementById('charNameInput').value = "";
+            document.getElementById('charRoleInput').value = "";
+            document.getElementById('charDescInput').value = "";
+            showCharModal();
+        }
+
+        function editCharacter(id) {
+            editingCharId = id;
+            const c = state.project.characters.find(x => x.id === id);
+            document.getElementById('charNameInput').value = c.name;
+            document.getElementById('charRoleInput').value = c.role;
+            document.getElementById('charDescInput').value = c.desc;
+            showCharModal();
+        }
+
+        function saveCharacter() {
+            const name = document.getElementById('charNameInput').value;
+            const role = document.getElementById('charRoleInput').value;
+            const desc = document.getElementById('charDescInput').value;
+            if (!name) {
+                showToast("Name is required", 'error');
+                return;
+            }
+            if (editingCharId) {
+                const c = state.project.characters.find(x => x.id === editingCharId);
+                c.name = name; c.role = role; c.desc = desc;
+            } else {
+                state.project.characters.push({ id: 'char' + Date.now(), name, role, desc });
+            }
+            closeCharModal();
+            renderCharacters();
+            saveData();
+        }
+
+        function deleteCharacter(id, e) {
+            e.stopPropagation();
+            showConfirm(t('confirmDelete'), (confirmed) => {
+                if(confirmed) {
+                    state.project.characters = state.project.characters.filter(c => c.id !== id);
+                    renderCharacters();
+                    saveData();
+                }
+            });
+        }
+
+        function showCharModal() { 
+            const m = document.getElementById('charModal');
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
+        }
+        function closeCharModal() {
+            const m = document.getElementById('charModal');
+            m.classList.add('opacity-0'); m.children[0].classList.add('scale-95');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        }
+
+        // --- Common ---
+        function toggleSettings() {
+            const m = els.modal;
+            if(m.classList.contains('hidden')) {
+                m.classList.remove('hidden');
+                setTimeout(() => { m.classList.remove('opacity-0'); els.modalContent.classList.remove('scale-95'); }, 10);
+            } else {
+                m.classList.add('opacity-0');
+                els.modalContent.classList.add('scale-95');
+                setTimeout(() => m.classList.add('hidden'), 300);
+            }
+        }
+        function setupShortcuts() {
+            Mousetrap.reset();
+            const s = state.shortcuts;
+            Mousetrap.bind(s.save, (e) => { e.preventDefault(); saveData(); showSaveStatus(); });
+            Mousetrap.bind(s.new_ep, (e) => { e.preventDefault(); addEpisode(); });
+            Mousetrap.bind(s.new_ch, (e) => { e.preventDefault(); addChapter(); });
+            Mousetrap.bind(s.zen, (e) => { e.preventDefault(); toggleZenMode(); });
+            Mousetrap.bind(s.reader, (e) => { e.preventDefault(); toggleReaderMode(); });
+            Mousetrap.bind(s.toggle_sidebar, (e) => { 
+                e.preventDefault(); 
+                const sb = document.getElementById('leftSidebar');
+                sb.style.transform = sb.style.transform === 'translateX(-100%)' ? 'translateX(0)' : 'translateX(-100%)';
+                if(sb.style.width === '0px') { sb.style.width = '18rem'; } else { sb.style.width = '0px'; }
+            });
+        }
+        function setupInputs() {
+            els.editor.addEventListener('input', () => {
+                const ep = getCurrentEpisode();
+                if(ep) ep.content = els.editor.value;
+                updateStats();
+                debouncedSave();
+            });
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#contextMenu')) els.ctxMenu.style.display = 'none';
+            });
+            ['plotKi','plotSho','plotTen','plotKetsu'].forEach((id, i) => {
+                const key = ['k','s','t','k'][i];
+                const el = document.getElementById(id);
+                el.value = state.project.plot[key] || "";
+                el.addEventListener('input', (e) => {
+                    state.project.plot[key] = e.target.value;
+                    debouncedSave();
+                });
+            });
+            document.getElementById('projectTitleInput').value = state.project.title;
+            document.getElementById('projectTitleInput').addEventListener('change', (e) => {
+                state.project.title = e.target.value;
+                saveData();
+            });
+            document.getElementById('importFile').addEventListener('change', handleImportFile);
+        }
+
+        function applyStyles() {
+            const r = document.documentElement.style;
+            const b = document.body;
+            b.className = '';
+            b.classList.add(state.ui.theme + '-mode');
+            if (state.ui.readerMode) b.classList.add('reader-mode');
+            
+            ['light', 'dark'].forEach(t => {
+                const btn = document.getElementById('btn-' + t);
+                if (state.ui.theme === t) {
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-[var(--text-primary)]');
+                    if (t === 'dark') btn.classList.add('bg-white/20', 'text-white');
+                } else {
+                    btn.className = 'flex-1 py-1.5 text-xs rounded-md text-[var(--text-secondary)] transition-all hover:bg-[var(--border-color)]';
+                }
+            });
+            updateLanguage(); 
+
+            const btnReader = document.getElementById('btn-reader-toggle');
+            if (state.ui.readerMode) {
+                btnReader.classList.add('bg-[var(--accent-bg)]', 'border-[var(--accent-color)]', 'text-[var(--accent-color)]');
+            } else {
+                btnReader.className = 'w-full h-full rounded-lg border border-[var(--border-color)] text-xs font-medium hover:border-[var(--accent-color)] transition-all text-[var(--text-secondary)]';
+            }
+            
+            ['mincho', 'gothic', 'hand'].forEach(f => {
+                const btn = document.getElementById('font-' + f);
+                if (state.ui.font === f) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            
+            const container = document.getElementById('mainContainer');
+            container.classList.remove('font-mincho', 'font-gothic', 'font-hand');
+            container.classList.add('font-' + state.ui.font);
+
+            r.setProperty('--editor-font-size', state.ui.size + 'px');
+            const lh = state.ui.size * 2.0; 
+            r.setProperty('--editor-line-height', lh + 'px');
+            r.setProperty('--editor-padding-top', lh + 'px'); 
+
+            const sheet = document.getElementById('editorSheet');
+            const main = document.querySelector('main');
+            if (state.ui.vertical) {
+                main.classList.add('writing-vertical');
+            } else {
+                main.classList.remove('writing-vertical');
+            }
+            if (state.ui.lined) sheet.classList.add('style-lined');
+            else sheet.classList.remove('style-lined');
+        }
+
+        function updateStats() {
+            const text = els.editor.value;
+            const charCount = text.replace(/\s/g, '').length;
+            const lines = text.split('\n').length;
+            document.getElementById('statCountBig').innerText = charCount.toLocaleString();
+            document.getElementById('statPaper').innerText = (charCount / 400).toFixed(1);
+            document.getElementById('statTime').innerText = Math.ceil(charCount / 600) + ' min';
+            document.getElementById('statLines').innerText = lines;
+            const sessionDiff = charCount - state.sessionStartCount;
+            const elSession = document.getElementById('sessionCount');
+            elSession.innerText = (sessionDiff > 0 ? '+' : '') + sessionDiff;
+            elSession.className = 'font-bold font-mono ' + (sessionDiff >= 0 ? 'text-[var(--accent-color)]' : 'text-red-500');
+        }
+
+        function toggleReaderMode() { state.ui.readerMode = !state.ui.readerMode; applyStyles(); saveData(); }
+        function toggleZenMode() { document.body.classList.toggle('zen-mode'); state.ui.zen = !state.ui.zen; }
+        function toggleOrientation() { state.ui.vertical = !state.ui.vertical; applyStyles(); saveData(); }
+        function toggleLinedPaper() { state.ui.lined = !state.ui.lined; applyStyles(); saveData(); }
+        function setTheme(t) { state.ui.theme = t; applyStyles(); saveData(); }
+        function setFont(f) { state.ui.font = f; applyStyles(); saveData(); }
+        function setSize(s) { state.ui.size = s; document.getElementById('sizeVal').innerText = s+'px'; applyStyles(); saveData(); }
+        function switchTab(t) {
+            ['chars', 'plot', 'info'].forEach(id => {
+                const btn = document.getElementById('tab-'+id);
+                const content = document.getElementById('content-'+id);
+                if(id === t) {
+                    btn.classList.add('border-[var(--accent-color)]', 'text-[var(--accent-color)]');
+                    btn.classList.remove('border-transparent', 'text-[var(--text-secondary)]', 'hover:text-[var(--text-primary)]');
+                    content.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('border-[var(--accent-color)]', 'text-[var(--accent-color)]');
+                    btn.classList.add('border-transparent', 'text-[var(--text-secondary)]', 'hover:text-[var(--text-primary)]');
+                    content.classList.add('hidden');
+                }
+            });
+        }
+        function insertText(txt, wrap) {
+            const start = els.editor.selectionStart;
+            const end = els.editor.selectionEnd;
+            const val = els.editor.value;
+            let replace = txt;
+            if(wrap) replace = txt.charAt(0) + val.substring(start, end) + wrap;
+            els.editor.setRangeText(replace, start, end, 'end');
+            if(wrap && start===end) els.editor.selectionStart--;
+            els.editor.focus();
+            updateStats();
+        }
+        const debouncedSave = debounce(() => {
+            saveData();
+            const s = document.getElementById('saveStatus');
+            s.innerText = state.ui.lang === 'ja' ? '保存完了' : 'Saved';
+            s.style.color = 'var(--accent-color)';
+            setTimeout(() => { s.innerText = 'Synced'; s.style.color = 'var(--text-secondary)'; }, 2000);
+        }, 1000);
+        function saveData() { localStorage.setItem('zenovel_v3', JSON.stringify(state)); }
+        function loadData() {
+            const d = localStorage.getItem('zenovel_v3');
+            if(d) {
+                const p = JSON.parse(d);
+                state.project = { ...state.project, ...p.project };
+                state.ui = { ...state.ui, ...p.ui };
+                state.shortcuts = { ...state.shortcuts, ...p.shortcuts };
+            }
+        }
+        function debounce(func, wait) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func(...a), wait); }; }
+        function showSaveStatus() { const s = document.getElementById('saveStatus'); s.innerText = state.ui.lang === 'ja' ? '保存中...' : 'Saving...'; }
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "zenovel_backup.json");
+            document.body.appendChild(dl); dl.click(); dl.remove();
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
