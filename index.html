@@ -22,7 +22,7 @@
             --bg-app: #f5f5f7;
             --bg-sidebar: rgba(255, 255, 255, 0.85);
             --bg-editor: #ffffff;
-            --bg-status: #ffffff; /* Status bar background */
+            --bg-status: #ffffff;
             --text-primary: #1d1d1f;
             --text-secondary: #86868b;
             --border-color: rgba(0, 0, 0, 0.08);
@@ -108,7 +108,7 @@
             position: relative;
         }
 
-        /* --- Status Bar (VSCode Style) --- */
+        /* --- Status Bar --- */
         .app-status-bar {
             height: var(--status-height);
             background-color: var(--bg-status);
@@ -161,27 +161,28 @@
 
         .editor-scroll-area {
             flex: 1;
-            overflow-y: overlay;
-            overflow-x: hidden;
-            padding: 40px 20px;
+            overflow: hidden;
+            padding: 32px;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: stretch;
         }
         
         .editor-sheet {
             background-color: var(--bg-editor);
             width: 100%;
             max-width: var(--editor-width);
-            min-height: 100%;
-            border-radius: 2px;
+            height: 100%;
+            border-radius: 4px;
             box-shadow: var(--shadow-soft);
             transition: all 0.3s ease;
             position: relative;
-            margin-bottom: 100px;
+            display: flex;
+            flex-direction: column;
         }
 
         textarea.main-editor {
+            flex: 1;
             background: transparent;
             color: inherit;
             resize: none;
@@ -189,7 +190,8 @@
             outline: none;
             width: 100%;
             height: 100%;
-            min-height: 80vh;
+            overflow-y: auto;
+            overflow-x: hidden;
             font-size: var(--editor-font-size);
             line-height: var(--editor-line-height);
             font-feature-settings: "palt";
@@ -199,6 +201,7 @@
         }
         
         @media (max-width: 768px) {
+            .editor-scroll-area { padding: 12px; }
             textarea.main-editor { padding: var(--editor-padding-top) 1.5rem; }
         }
 
@@ -228,8 +231,9 @@
         .writing-vertical textarea.main-editor {
             writing-mode: vertical-rl;
             text-orientation: upright;
-            height: 80vh;
+            height: 100%;
             width: 100%;
+            overflow-y: hidden;
             overflow-x: auto;
             padding: 3rem var(--editor-padding-top);
         }
@@ -294,7 +298,11 @@
         body.zen-mode .sidebar { transform: translateX(-100%); opacity: 0; pointer-events: none; width: 0; }
         body.zen-mode .sidebar-right { transform: translateX(100%); opacity: 0; pointer-events: none; width: 0; }
         body.zen-mode .toolbar-float { transform: translateY(-200%); opacity: 0; }
-        body.zen-mode .editor-sheet { box-shadow: none; background-color: transparent; }
+        
+        /* Zen: Maximize editor area */
+        body.zen-mode .editor-scroll-area { padding: 0; }
+        body.zen-mode .editor-sheet { border-radius: 0; max-width: 900px; box-shadow: none; background: transparent; }
+        
         body.zen-mode .zen-exit { opacity: 1; transform: translateY(0); pointer-events: auto; }
         body.zen-mode .app-status-bar { opacity: 0; pointer-events: none; }
         /* Only zen timer visible */
@@ -315,7 +323,6 @@
             background-color: var(--accent-bg);
             color: var(--accent-color);
         }
-        /* Ensure text is readable in active state for dark mode */
         .dark-mode .setting-btn.active {
             color: #ffffff;
             background-color: var(--accent-color);
@@ -388,13 +395,6 @@
         .welcome-btn h4 { font-weight: bold; color: var(--text-primary); margin-bottom: 4px; font-size: 14px; }
         .welcome-btn p { font-size: 12px; color: var(--text-secondary); }
         
-        .welcome-lang-selector {
-            position: absolute;
-            bottom: 24px;
-            right: 24px;
-            width: auto;
-            margin: 0;
-        }
         .welcome-footer {
             margin-top: 24px;
             display: flex;
@@ -466,14 +466,15 @@
             width: 100%;
             border-top: 1px solid var(--border-color);
             padding-top: 12px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
+        .pomo-input-group { display: flex; flex-direction: column; gap: 4px; }
         .pomo-input {
-            width: 60px;
-            padding: 4px;
-            border-radius: 4px;
+            width: 100%;
+            padding: 6px;
+            border-radius: 6px;
             border: 1px solid var(--border-color);
             background: var(--bg-app);
             color: var(--text-primary);
@@ -484,7 +485,7 @@
         /* Toast Notifications */
         #toastContainer {
             position: fixed;
-            bottom: 60px; /* Above status bar */
+            bottom: 60px;
             right: 24px;
             z-index: 200;
             display: flex;
@@ -514,22 +515,56 @@
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
 
-        /* Zen Timer Float */
+        /* Zen Timer Float - Bottom Right */
         .zen-timer-display {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-variant-numeric: tabular-nums;
-            font-size: 14px;
+            bottom: 30px;
+            right: 30px;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.5s;
             z-index: 60;
-            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .zen-ring-container {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+        
+        .zen-ring-svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+        
+        .zen-ring-circle-bg {
+            fill: none;
+            stroke: rgba(128,128,128,0.2);
+            stroke-width: 4;
+        }
+        
+        .zen-ring-circle-progress {
+            fill: none;
+            stroke: var(--accent-color);
+            stroke-width: 4;
+            stroke-dasharray: 100, 100; /* Calculated in JS */
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+        }
+        
+        .zen-timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
         }
         
     </style>
@@ -578,20 +613,43 @@
             <button onclick="togglePomoWindow()" class="hover:text-[var(--accent-color)]"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
         <div id="pomoDisplay" class="pomo-display">25:00</div>
+        <div id="pomoStatusText" class="text-xs text-[var(--accent-color)] font-bold uppercase tracking-wider mb-4">Focus</div>
+        
         <div class="pomo-controls">
-            <button onclick="startPomo()" class="pomo-btn pomo-btn-start" id="btnPomoStart" data-i18n="start">Start</button>
-            <button onclick="stopPomo()" class="pomo-btn pomo-btn-stop" id="btnPomoStop" data-i18n="stop">Stop</button>
+            <button onclick="togglePomo()" class="pomo-btn pomo-btn-start" id="btnPomoToggle" data-i18n="start">Start</button>
+            <button onclick="resetPomo()" class="pomo-btn pomo-btn-stop" data-i18n="reset">Reset</button>
         </div>
+        
         <div class="pomo-settings">
-            <span class="text-xs text-[var(--text-secondary)]" data-i18n="timerMin">Min:</span>
-            <input type="number" id="pomoDuration" class="pomo-input" value="25" min="1" max="120">
-            <button onclick="resetPomo()" class="pomo-btn pomo-btn-reset hover:text-[var(--text-primary)]" title="Reset"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+            <div class="pomo-input-group">
+                <label class="text-[10px] text-[var(--text-secondary)]" data-i18n="workTime">Work (min)</label>
+                <input type="number" id="pomoWorkDuration" class="pomo-input" value="25" min="1" max="120">
+            </div>
+            <div class="pomo-input-group">
+                <label class="text-[10px] text-[var(--text-secondary)]" data-i18n="breakTime">Break (min)</label>
+                <input type="number" id="pomoBreakDuration" class="pomo-input" value="5" min="1" max="60">
+            </div>
         </div>
     </div>
 
-    <!-- Zen Timer Float (Visible in Zen Mode) -->
+    <!-- Zen Timer Float (Visible in Zen Mode) - Bottom Right -->
     <div id="zenTimerDisplay" class="zen-timer-display">
-        <span id="zenPomoTime">25:00</span>
+        <div class="zen-ring-container">
+            <svg class="zen-ring-svg" viewBox="0 0 36 36">
+                <path class="zen-ring-circle-bg"
+                    d="M18 2.0845
+                       a 15.9155 15.9155 0 0 1 0 31.831
+                       a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path class="zen-ring-circle-progress" id="zenProgressPath"
+                    stroke-dasharray="100, 100"
+                    d="M18 2.0845
+                       a 15.9155 15.9155 0 0 1 0 31.831
+                       a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+            </svg>
+            <div class="zen-timer-text" id="zenTimerText">25</div>
+        </div>
     </div>
 
     <!-- Toast Container -->
@@ -602,9 +660,22 @@
         <aside id="leftSidebar" class="sidebar w-72 flex-shrink-0 flex flex-col glass-panel z-20 transition-all duration-500">
             <!-- Header -->
             <div class="h-14 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
-                <div class="flex items-center gap-2 overflow-hidden">
-                    <i data-lucide="book-open" class="w-4 h-4 text-[var(--accent-color)]"></i>
+                <div class="flex items-center gap-2 overflow-hidden flex-1">
+                    <i data-lucide="book-open" class="w-4 h-4 text-[var(--accent-color)] flex-shrink-0"></i>
                     <input id="projectTitleInput" type="text" class="bg-transparent border-none outline-none font-bold text-sm text-[var(--text-primary)] w-full truncate placeholder-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--accent-color)] rounded px-1" value="無題の物語">
+                </div>
+                
+                <!-- New Header Buttons -->
+                <div class="flex items-center gap-1 ml-2">
+                    <button onclick="exportJSON()" class="p-1.5 rounded-lg hover:bg-[var(--border-color)] text-[var(--text-secondary)] transition-colors" title="Save">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="triggerImport()" class="p-1.5 rounded-lg hover:bg-[var(--border-color)] text-[var(--text-secondary)] transition-colors" title="Import">
+                        <i data-lucide="folder-down" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="toggleSettings()" class="p-1.5 rounded-lg hover:bg-[var(--border-color)] text-[var(--text-secondary)] transition-colors" title="Settings">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </div>
 
@@ -653,7 +724,8 @@
                 </div>
             </div>
 
-            <div class="editor-scroll-area custom-scroll" id="editorScroll">
+            <!-- Scroll Area -->
+            <div class="editor-scroll-area" id="editorScroll">
                 <div id="editorSheet" class="editor-sheet">
                     <textarea id="mainEditor" class="main-editor" placeholder="..." spellcheck="false"></textarea>
                 </div>
@@ -722,7 +794,6 @@
     <!-- Status Bar (Moved Bottom) -->
     <footer id="appStatusBar" class="app-status-bar">
         <div class="status-section">
-            <button class="status-item hover:text-[var(--accent-color)] transition-colors" onclick="toggleSettings()"><i data-lucide="menu" class="w-3.5 h-3.5"></i></button>
             <div class="h-3 w-px bg-[var(--border-color)]"></div>
             <span id="saveStatus" class="opacity-70">Synced</span>
         </div>
@@ -916,8 +987,11 @@
                 importError: "ファイルの読み込みに失敗しました",
                 untitled: "無題の物語",
                 timerMin: "時間(分):",
+                workTime: "作業時間 (分)",
+                breakTime: "休憩時間 (分)",
                 start: "開始",
-                stop: "停止"
+                stop: "停止",
+                reset: "リセット"
             },
             en: {
                 structure: "Structure",
@@ -971,8 +1045,11 @@
                 importError: "Failed to import file",
                 untitled: "Untitled Story",
                 timerMin: "Min:",
+                workTime: "Work (min)",
+                breakTime: "Break (min)",
                 start: "Start",
-                stop: "Stop"
+                stop: "Stop",
+                reset: "Reset"
             }
         };
 
@@ -1010,9 +1087,12 @@
         // Timer State
         const pomo = {
             timeLeft: 25 * 60,
+            duration: 25,
+            breakDuration: 5,
+            mode: 'work', // 'work', 'break'
             isActive: false,
             interval: null,
-            duration: 25
+            totalDuration: 25 * 60
         };
 
         const els = {
@@ -1065,6 +1145,15 @@
             setupDragAndDrop();
             setupModalListeners();
             setupInputs();
+            
+            // Explicitly handle Ctrl+S for JSON export as requested
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    exportJSON();
+                    showToast(t('backup') + " " + t('save'), 'success'); // Just feedback
+                }
+            });
         }
 
         // --- Welcome Logic ---
@@ -1131,18 +1220,37 @@
             }
         }
 
+        function togglePomo() {
+            if (pomo.isActive) {
+                stopPomo();
+            } else {
+                startPomo();
+            }
+        }
+
         function startPomo() {
             if (pomo.isActive) return;
             pomo.isActive = true;
-            document.getElementById('btnPomoStart').style.opacity = '0.5';
-            document.getElementById('pomoDuration').disabled = true;
+            
+            const btn = document.getElementById('btnPomoToggle');
+            btn.innerText = t('stop');
+            btn.classList.replace('pomo-btn-start', 'pomo-btn-stop');
+            
+            document.getElementById('pomoWorkDuration').disabled = true;
+            document.getElementById('pomoBreakDuration').disabled = true;
             
             pomo.interval = setInterval(() => {
                 pomo.timeLeft--;
                 if (pomo.timeLeft <= 0) {
                     stopPomo();
-                    showToast("Time's up!", 'info');
-                    resetPomo();
+                    showToast("Time's up! " + (pomo.mode === 'work' ? "Take a break." : "Back to work!"), 'info');
+                    
+                    // Auto switch mode logic could go here, for now just stop/reset to next mode
+                    if(pomo.mode === 'work') {
+                        setPomoMode('break');
+                    } else {
+                        setPomoMode('work');
+                    }
                 }
                 updatePomoDisplay();
             }, 1000);
@@ -1151,29 +1259,77 @@
         function stopPomo() {
             clearInterval(pomo.interval);
             pomo.isActive = false;
-            document.getElementById('btnPomoStart').style.opacity = '1';
-            document.getElementById('pomoDuration').disabled = false;
+            
+            const btn = document.getElementById('btnPomoToggle');
+            btn.innerText = t('start');
+            btn.classList.replace('pomo-btn-stop', 'pomo-btn-start');
+
+            document.getElementById('pomoWorkDuration').disabled = false;
+            document.getElementById('pomoBreakDuration').disabled = false;
         }
 
         function resetPomo() {
             stopPomo();
-            const inputVal = parseInt(document.getElementById('pomoDuration').value) || 25;
-            pomo.duration = inputVal;
-            pomo.timeLeft = pomo.duration * 60;
+            updatePomoDurationFromInputs();
+            pomo.timeLeft = (pomo.mode === 'work' ? pomo.duration : pomo.breakDuration) * 60;
+            pomo.totalDuration = pomo.timeLeft;
             updatePomoDisplay();
+        }
+
+        function setPomoMode(mode) {
+            pomo.mode = mode;
+            const statusText = document.getElementById('pomoStatusText');
+            
+            if(mode === 'work') {
+                statusText.innerText = "FOCUS";
+                statusText.style.color = "var(--accent-color)";
+                pomo.timeLeft = pomo.duration * 60;
+            } else {
+                statusText.innerText = "BREAK";
+                statusText.style.color = "#34c759";
+                pomo.timeLeft = pomo.breakDuration * 60;
+            }
+            pomo.totalDuration = pomo.timeLeft;
+            updatePomoDisplay();
+        }
+
+        function updatePomoDurationFromInputs() {
+            const workVal = parseInt(document.getElementById('pomoWorkDuration').value) || 25;
+            const breakVal = parseInt(document.getElementById('pomoBreakDuration').value) || 5;
+            pomo.duration = workVal;
+            pomo.breakDuration = breakVal;
         }
 
         function updatePomoDisplay() {
             const m = Math.floor(pomo.timeLeft / 60).toString().padStart(2, '0');
             const s = (pomo.timeLeft % 60).toString().padStart(2, '0');
             const str = `${m}:${s}`;
+            
+            // Update Text Displays
             document.getElementById('pomoDisplay').innerText = str;
             document.getElementById('pomoTimeStatus').innerText = str;
-            document.getElementById('zenPomoTime').innerText = str;
+            document.getElementById('zenTimerText').innerText = m; // Just minutes for Zen circle usually better, or str
+
+            // Update Zen Circle Progress
+            const circle = document.getElementById('zenProgressPath');
+            const radius = 15.9155;
+            const circumference = 2 * Math.PI * radius; // approx 100
+            
+            // Calculate progress (inverted logic: full circle -> empty)
+            const percent = (pomo.timeLeft / pomo.totalDuration) * 100;
+            
+            // stroke-dasharray="current, total"
+            // stroke-dashoffset to rotate starting point if needed, but here simple length calc
+            circle.setAttribute("stroke-dasharray", `${percent}, 100`);
         }
 
-        document.getElementById('pomoDuration').addEventListener('change', (e) => {
-            if(!pomo.isActive) resetPomo();
+        document.getElementById('pomoWorkDuration').addEventListener('change', (e) => {
+            if(!pomo.isActive && pomo.mode === 'work') resetPomo();
+            else updatePomoDurationFromInputs();
+        });
+        document.getElementById('pomoBreakDuration').addEventListener('change', (e) => {
+            if(!pomo.isActive && pomo.mode === 'break') resetPomo();
+            else updatePomoDurationFromInputs();
         });
 
         // --- Toast System ---
