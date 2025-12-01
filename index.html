@@ -181,13 +181,9 @@
             flex-direction: column;
         }
 
-        textarea.main-editor {
+        /* Shared styles for Textarea and Viewer */
+        .editor-content-base {
             flex: 1;
-            background: transparent;
-            color: inherit;
-            resize: none;
-            border: none;
-            outline: none;
             width: 100%;
             height: 100%;
             overflow-y: auto;
@@ -195,14 +191,32 @@
             font-size: var(--editor-font-size);
             line-height: var(--editor-line-height);
             font-feature-settings: "palt";
-            caret-color: var(--accent-color);
             padding: var(--editor-padding-top) 3rem; 
+            outline: none;
+            border: none;
+            background: transparent;
+            color: inherit;
+        }
+
+        textarea.main-editor {
+            resize: none;
+            caret-color: var(--accent-color);
             user-select: text;
         }
+
+        /* Reader Mode Viewer */
+        #mainViewer {
+            display: none;
+            white-space: pre-wrap;
+            cursor: text;
+        }
+        /* When active, hide textarea and show viewer */
+        .view-mode textarea.main-editor { display: none; }
+        .view-mode #mainViewer { display: block; }
         
         @media (max-width: 768px) {
             .editor-scroll-area { padding: 12px; }
-            textarea.main-editor { padding: var(--editor-padding-top) 1.5rem; }
+            .editor-content-base { padding: var(--editor-padding-top) 1.5rem; }
         }
 
         textarea.main-editor::placeholder {
@@ -211,12 +225,12 @@
         }
 
         /* Font Overrides */
-        .font-mincho textarea.main-editor { font-family: var(--font-mincho) !important; }
-        .font-gothic textarea.main-editor { font-family: var(--font-gothic) !important; }
-        .font-hand textarea.main-editor { font-family: var(--font-hand) !important; }
+        .font-mincho .editor-content-base { font-family: var(--font-mincho) !important; }
+        .font-gothic .editor-content-base { font-family: var(--font-gothic) !important; }
+        .font-hand .editor-content-base { font-family: var(--font-hand) !important; }
 
         /* Lined Paper */
-        .style-lined textarea.main-editor {
+        .style-lined .editor-content-base {
             background-image: linear-gradient(transparent calc(100% - 1px), var(--line-color) calc(100% - 1px));
             background-size: 100% var(--editor-line-height);
             background-attachment: local;
@@ -228,7 +242,7 @@
             display: flex;
             flex-direction: row-reverse;
         }
-        .writing-vertical textarea.main-editor {
+        .writing-vertical .editor-content-base {
             writing-mode: vertical-rl;
             text-orientation: upright;
             height: 100%;
@@ -237,7 +251,7 @@
             overflow-x: auto;
             padding: 3rem var(--editor-padding-top);
         }
-        .writing-vertical.style-lined textarea.main-editor {
+        .writing-vertical.style-lined .editor-content-base {
             background-image: linear-gradient(90deg, transparent calc(100% - 1px), var(--line-color) calc(100% - 1px));
             background-size: var(--editor-line-height) 100%;
             background-position: -4px 0;
@@ -298,14 +312,10 @@
         body.zen-mode .sidebar { transform: translateX(-100%); opacity: 0; pointer-events: none; width: 0; }
         body.zen-mode .sidebar-right { transform: translateX(100%); opacity: 0; pointer-events: none; width: 0; }
         body.zen-mode .toolbar-float { transform: translateY(-200%); opacity: 0; }
-        
-        /* Zen: Maximize editor area */
         body.zen-mode .editor-scroll-area { padding: 0; }
         body.zen-mode .editor-sheet { border-radius: 0; max-width: 900px; box-shadow: none; background: transparent; }
-        
         body.zen-mode .zen-exit { opacity: 1; transform: translateY(0); pointer-events: auto; }
         body.zen-mode .app-status-bar { opacity: 0; pointer-events: none; }
-        /* Only zen timer visible */
         body.zen-mode #zenTimerDisplay { opacity: 1; pointer-events: auto; }
 
         /* Floating Toolbar */
@@ -482,6 +492,69 @@
             font-size: 12px;
         }
 
+        /* Search Modal */
+        #searchModal {
+            position: absolute;
+            top: 80px;
+            right: 40px;
+            width: 320px;
+            background: var(--bg-sidebar);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-pop);
+            padding: 16px;
+            display: none;
+            z-index: 70;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #searchModal.active { display: flex; }
+        .search-row { display: flex; gap: 8px; align-items: center; }
+        .search-input { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-app); font-size: 13px; color: var(--text-primary); outline: none; }
+        .search-btn { padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); }
+        .search-btn:hover { background: var(--border-color); }
+        .search-btn.primary { background: var(--accent-color); color: white; border-color: transparent; }
+
+        /* Share Modal (New) */
+        .share-tab-container { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
+        .share-tab { flex: 1; text-align: center; padding: 10px; font-size: 13px; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
+        .share-tab:hover { color: var(--text-primary); }
+        .share-tab.active { border-color: var(--accent-color); color: var(--accent-color); font-weight: bold; }
+        .share-content { display: none; }
+        .share-content.active { display: block; }
+        
+        .tweet-card {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: var(--bg-app);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .tweet-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px; color: var(--text-secondary); }
+        .tweet-body { white-space: pre-wrap; margin-bottom: 8px; }
+        .tweet-actions { display: flex; justify-content: flex-end; gap: 8px; }
+        .action-btn { padding: 4px 8px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); cursor: pointer; display: flex; alignItems: center; gap: 4px; }
+        .action-btn:hover { background: var(--border-color); }
+
+        .narou-preview {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-app);
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 12px;
+            resize: none;
+            margin-bottom: 12px;
+            outline: none;
+        }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-primary); cursor: pointer; margin-bottom: 16px; }
+
         /* Toast Notifications */
         #toastContainer {
             position: fixed;
@@ -632,6 +705,23 @@
         </div>
     </div>
 
+    <!-- Search Modal -->
+    <div id="searchModal">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-bold text-[var(--text-secondary)]">Find & Replace</span>
+            <button onclick="toggleSearch()" class="hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-3 h-3"></i></button>
+        </div>
+        <div class="search-row">
+            <input id="searchInput" class="search-input" placeholder="Find..." onkeydown="if(event.key==='Enter') findNext()">
+            <button onclick="findNext()" class="search-btn"><i data-lucide="arrow-down" class="w-3 h-3"></i></button>
+        </div>
+        <div class="search-row">
+            <input id="replaceInput" class="search-input" placeholder="Replace with...">
+            <button onclick="replaceAll()" class="search-btn primary">All</button>
+            <button onclick="replaceNext()" class="search-btn">One</button>
+        </div>
+    </div>
+
     <!-- Zen Timer Float (Visible in Zen Mode) - Bottom Right -->
     <div id="zenTimerDisplay" class="zen-timer-display">
         <div class="zen-ring-container">
@@ -673,6 +763,9 @@
                     <button onclick="triggerImport()" class="p-1.5 rounded-lg hover:bg-[var(--border-color)] text-[var(--text-secondary)] transition-colors" title="Import">
                         <i data-lucide="folder-down" class="w-4 h-4"></i>
                     </button>
+                    <button onclick="openShareModal()" class="p-1.5 rounded-lg hover:bg-[var(--border-color)] text-[var(--text-secondary)] transition-colors" title="Share/Export">
+                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                    </button>
                     <button onclick="toggleSettings()" class="p-1.5 rounded-lg hover:bg-[var(--border-color)] text-[var(--text-secondary)] transition-colors" title="Settings">
                         <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
                     </button>
@@ -713,7 +806,7 @@
                 <button onclick="toggleLinedPaper()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                     <i data-lucide="align-justify" class="w-4 h-4"></i>
                 </button>
-                <button onclick="toggleReaderMode()" id="btnReaderMode" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                <button onclick="toggleViewMode()" id="btnViewMode" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Toggle Reader Mode (Alt+R)">
                     <i data-lucide="glasses" class="w-4 h-4"></i>
                 </button>
                 <div class="w-px h-3 bg-[var(--border-color)]"></div>
@@ -727,7 +820,8 @@
             <!-- Scroll Area -->
             <div class="editor-scroll-area" id="editorScroll">
                 <div id="editorSheet" class="editor-sheet">
-                    <textarea id="mainEditor" class="main-editor" placeholder="..." spellcheck="false"></textarea>
+                    <textarea id="mainEditor" class="main-editor editor-content-base" placeholder="..." spellcheck="false"></textarea>
+                    <div id="mainViewer" class="editor-content-base" onclick="enableEditMode()"></div>
                 </div>
             </div>
 
@@ -839,6 +933,44 @@
         </div>
     </div>
 
+    <!-- Share/Export Modal -->
+    <div id="shareModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="modal-title" style="margin:0">Share & Export</h3>
+                <button onclick="closeShareModal()" class="hover:text-[var(--text-primary)] text-[var(--text-secondary)]"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="share-tab-container">
+                <div class="share-tab active" onclick="switchShareTab('twitter')" id="shareTabTwitter">Twitter / X</div>
+                <div class="share-tab" onclick="switchShareTab('narou')" id="shareTabNarou">Narou (Web Novel)</div>
+            </div>
+
+            <!-- Twitter Content -->
+            <div id="shareContentTwitter" class="share-content active">
+                <div class="text-xs text-[var(--text-secondary)] mb-2">Split content into 140-char chunks for threading.</div>
+                <div id="tweetList" class="overflow-y-auto max-h-[300px] custom-scroll pr-1">
+                    <!-- Dynamic Tweets -->
+                </div>
+            </div>
+
+            <!-- Narou Content -->
+            <div id="shareContentNarou" class="share-content">
+                <div class="text-xs text-[var(--text-secondary)] mb-2">Formatted for Shōsetsuka ni Narō.</div>
+                <textarea id="narouPreview" class="narou-preview" readonly></textarea>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="narouIndent"> Auto-indent paragraph start
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="narouEmptyLine"> Add empty lines between paragraphs
+                </label>
+                <div class="modal-actions">
+                    <button class="btn btn-primary w-full" onclick="copyNarouText()">Copy to Clipboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden File Input for Import -->
     <input type="file" id="importFile" hidden accept=".json">
 
@@ -942,7 +1074,7 @@
                 language: "言語",
                 appearance: "外観",
                 theme: "テーマ",
-                readerMode: "リーダーモード",
+                readerMode: "閲覧モード",
                 typography: "タイポグラフィ",
                 fontFamily: "フォント",
                 fontMincho: "明朝体",
@@ -1079,7 +1211,8 @@
                 "new_ch": "ctrl+shift+n",
                 "zen": "ctrl+/",
                 "toggle_sidebar": "ctrl+b",
-                "reader": "alt+r"
+                "reader": "alt+r",
+                "find": "ctrl+f"
             },
             sessionStartCount: 0
         };
@@ -1097,6 +1230,8 @@
 
         const els = {
             editor: document.getElementById('mainEditor'),
+            viewer: document.getElementById('mainViewer'),
+            editorContainer: document.getElementById('mainContainer'), // For toggle class
             tree: document.getElementById('treeContainer'),
             modal: document.getElementById('settingsModal'),
             modalContent: document.getElementById('settingsContent'),
@@ -1106,6 +1241,8 @@
             promptInput: document.getElementById('promptInput'),
             confirmModal: document.getElementById('confirmModal'),
             welcomeModal: document.getElementById('welcomeModal'),
+            shareModal: document.getElementById('shareModal'),
+            searchModal: document.getElementById('searchModal'),
             toastContainer: document.getElementById('toastContainer'),
             pomoWindow: document.getElementById('pomoWindow')
         };
@@ -1146,12 +1283,12 @@
             setupModalListeners();
             setupInputs();
             
-            // Explicitly handle Ctrl+S for JSON export as requested
+            // Explicitly handle Ctrl+S for JSON export
             document.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                     e.preventDefault();
                     exportJSON();
-                    showToast(t('backup') + " " + t('save'), 'success'); // Just feedback
+                    showToast(t('backup') + " " + t('save'), 'success'); 
                 }
             });
         }
@@ -1215,7 +1352,6 @@
                 els.pomoWindow.classList.remove('active');
             } else {
                 els.pomoWindow.style.display = 'flex';
-                // Trigger animation
                 setTimeout(() => els.pomoWindow.classList.add('active'), 10);
             }
         }
@@ -1245,7 +1381,6 @@
                     stopPomo();
                     showToast("Time's up! " + (pomo.mode === 'work' ? "Take a break." : "Back to work!"), 'info');
                     
-                    // Auto switch mode logic could go here, for now just stop/reset to next mode
                     if(pomo.mode === 'work') {
                         setPomoMode('break');
                     } else {
@@ -1305,21 +1440,13 @@
             const s = (pomo.timeLeft % 60).toString().padStart(2, '0');
             const str = `${m}:${s}`;
             
-            // Update Text Displays
             document.getElementById('pomoDisplay').innerText = str;
             document.getElementById('pomoTimeStatus').innerText = str;
-            document.getElementById('zenTimerText').innerText = m; // Just minutes for Zen circle usually better, or str
+            document.getElementById('zenTimerText').innerText = m;
 
-            // Update Zen Circle Progress
+            // Zen Circle
             const circle = document.getElementById('zenProgressPath');
-            const radius = 15.9155;
-            const circumference = 2 * Math.PI * radius; // approx 100
-            
-            // Calculate progress (inverted logic: full circle -> empty)
             const percent = (pomo.timeLeft / pomo.totalDuration) * 100;
-            
-            // stroke-dasharray="current, total"
-            // stroke-dashoffset to rotate starting point if needed, but here simple length calc
             circle.setAttribute("stroke-dasharray", `${percent}, 100`);
         }
 
@@ -1331,6 +1458,238 @@
             if(!pomo.isActive && pomo.mode === 'break') resetPomo();
             else updatePomoDurationFromInputs();
         });
+
+        // --- Search & Replace ---
+        function toggleSearch() {
+            const s = els.searchModal;
+            if (s.classList.contains('active')) {
+                s.classList.remove('active');
+                els.editor.focus();
+            } else {
+                s.classList.add('active');
+                document.getElementById('searchInput').focus();
+            }
+        }
+
+        function findNext() {
+            const query = document.getElementById('searchInput').value;
+            if (!query) return;
+            
+            const text = els.editor.value;
+            const start = els.editor.selectionEnd; // Start from current pos
+            let idx = text.indexOf(query, start);
+            
+            if (idx === -1) {
+                // Loop around
+                idx = text.indexOf(query, 0);
+            }
+            
+            if (idx !== -1) {
+                els.editor.focus();
+                els.editor.setSelectionRange(idx, idx + query.length);
+                // Scroll into view logic (basic)
+                const percent = idx / text.length;
+                els.editor.scrollTop = els.editor.scrollHeight * percent - els.editor.clientHeight / 2; 
+            } else {
+                showToast("Not found", 'info');
+            }
+        }
+
+        function replaceNext() {
+            const query = document.getElementById('searchInput').value;
+            const replace = document.getElementById('replaceInput').value;
+            if (!query) return;
+            
+            // Check if current selection matches query (to replace current highlight)
+            const selStart = els.editor.selectionStart;
+            const selEnd = els.editor.selectionEnd;
+            const selText = els.editor.value.substring(selStart, selEnd);
+            
+            if (selText === query) {
+                // Replace
+                els.editor.setRangeText(replace, selStart, selEnd, 'end');
+                findNext(); // Move to next
+                updateStats();
+            } else {
+                // Just find first
+                findNext();
+            }
+        }
+
+        function replaceAll() {
+            const query = document.getElementById('searchInput').value;
+            const replace = document.getElementById('replaceInput').value;
+            if (!query) return;
+            
+            const text = els.editor.value;
+            const newText = text.split(query).join(replace);
+            if (text !== newText) {
+                els.editor.value = newText;
+                updateStats();
+                showToast("Replaced all occurrences", 'success');
+            } else {
+                showToast("Nothing to replace", 'info');
+            }
+        }
+
+        // --- Reader Mode ---
+        function toggleViewMode() {
+            // Check current status via class on container?
+            const isView = els.editorContainer.classList.contains('view-mode');
+            if (isView) {
+                enableEditMode();
+            } else {
+                enableViewMode();
+            }
+        }
+
+        function enableViewMode() {
+            state.ui.readerMode = true; // Use this as toggle state if needed, or separate variable
+            els.editorContainer.classList.add('view-mode');
+            
+            // Parse Ruby
+            let text = els.editor.value;
+            // Escape HTML first
+            text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            // Ruby Parsing: ｜Kanji《Reading》
+            text = text.replace(/｜([^《]+)《([^》]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
+            // Ruby Parsing: Kanji《Reading》 (simple auto-detect for brackets next to kanji blocks?)
+            // Keeping it simple/safe: explicit pipe or kanji block
+            text = text.replace(/([\u4E00-\u9FFF]+)《([^》]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
+            
+            els.viewer.innerHTML = text;
+            
+            // Sync Scroll (approximate)
+            els.viewer.scrollTop = els.editor.scrollTop;
+            els.viewer.scrollLeft = els.editor.scrollLeft;
+            
+            document.getElementById('btnViewMode').classList.add('text-[var(--accent-color)]');
+        }
+
+        function enableEditMode() {
+            state.ui.readerMode = false;
+            els.editorContainer.classList.remove('view-mode');
+            els.editor.scrollTop = els.viewer.scrollTop; // Sync back
+            els.editor.scrollLeft = els.viewer.scrollLeft;
+            document.getElementById('btnViewMode').classList.remove('text-[var(--accent-color)]');
+            els.editor.focus();
+        }
+
+        function toggleReaderMode() {
+            // This was the old CSS-based toggle for themes (Sepia/LowContrast). 
+            // Now "Reader Mode" implies the ruby rendering view in this context request.
+            // Let's repurpose this toggle button in Settings to toggle the "Sepia/Dark Reader Theme" logic separately from View Mode.
+            state.ui.readerTheme = !state.ui.readerTheme;
+            applyStyles();
+            saveData();
+        }
+
+        // --- Share & Export ---
+        function openShareModal() {
+            els.shareModal.classList.add('active');
+            // Refresh content based on current active tab
+            if(document.getElementById('shareTabTwitter').classList.contains('active')) {
+                renderTweets();
+            } else {
+                updateNarouPreview();
+            }
+        }
+        function closeShareModal() {
+            els.shareModal.classList.remove('active');
+        }
+        function switchShareTab(tab) {
+            document.querySelectorAll('.share-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.share-content').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('shareTab' + (tab.charAt(0).toUpperCase() + tab.slice(1))).classList.add('active');
+            document.getElementById('shareContent' + (tab.charAt(0).toUpperCase() + tab.slice(1))).classList.add('active');
+            
+            if(tab === 'twitter') renderTweets();
+            if(tab === 'narou') updateNarouPreview();
+        }
+
+        // Twitter Logic
+        function renderTweets() {
+            const text = els.editor.value;
+            const tweets = splitForTwitter(text);
+            const list = document.getElementById('tweetList');
+            list.innerHTML = tweets.map((tw, i) => `
+                <div class="tweet-card">
+                    <div class="tweet-meta"><span>${i+1}/${tweets.length}</span><span>${tw.length} chars</span></div>
+                    <div class="tweet-body">${escapeHtml(tw)}</div>
+                    <div class="tweet-actions">
+                        <button class="action-btn" onclick="copyToClipboard('${escapeJs(tw)}')"><i data-lucide="copy" class="w-3 h-3"></i> Copy</button>
+                        <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(tw)}" target="_blank" class="action-btn"><i data-lucide="twitter" class="w-3 h-3"></i> Tweet</a>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function splitForTwitter(text) {
+            if(!text) return [];
+            const limit = 140;
+            const result = [];
+            let remaining = text.trim();
+            
+            while(remaining.length > 0) {
+                if(remaining.length <= limit) {
+                    result.push(remaining);
+                    break;
+                }
+                
+                // Find split point
+                let splitIdx = limit;
+                const searchWindow = remaining.substring(limit - 20, limit);
+                let bestBreak = -1;
+                ['\n', '。', '」', '！', '？', '!', '?'].forEach(char => {
+                    const idx = remaining.lastIndexOf(char, limit);
+                    if(idx > limit - 20 && idx > bestBreak) bestBreak = idx;
+                });
+                
+                if(bestBreak !== -1) splitIdx = bestBreak + 1; // Include the punctuation
+                
+                result.push(remaining.substring(0, splitIdx));
+                remaining = remaining.substring(splitIdx).trimStart();
+            }
+            return result;
+        }
+
+        // Narou Logic
+        function updateNarouPreview() {
+            let text = els.editor.value;
+            if(document.getElementById('narouIndent').checked) {
+                text = text.split('\n').map(line => {
+                    if(line && !line.match(/^[「『（【<〈]/)) return '　' + line;
+                    return line;
+                }).join('\n');
+            }
+            if(document.getElementById('narouEmptyLine').checked) {
+                text = text.replace(/\n/g, '\n\n');
+            }
+            document.getElementById('narouPreview').value = text;
+        }
+        
+        function copyNarouText() {
+            const text = document.getElementById('narouPreview').value;
+            copyToClipboard(text);
+        }
+        
+        document.getElementById('narouIndent').addEventListener('change', updateNarouPreview);
+        document.getElementById('narouEmptyLine').addEventListener('change', updateNarouPreview);
+
+        // Utils
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Copied to clipboard!", 'success');
+            });
+        }
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+        function escapeJs(text) {
+            return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+        }
 
         // --- Toast System ---
         function showToast(msg, type = 'info') {
@@ -1515,6 +1874,8 @@
                 const ch = state.project.chapters.find(c => c.episodes.includes(ep));
                 if(ch) ch.isOpen = true;
                 state.ui.chapterId = ch ? ch.id : null;
+                // Re-render preview if active
+                if(state.ui.readerMode || els.editorContainer.classList.contains('view-mode')) enableViewMode();
             }
         }
 
@@ -1769,7 +2130,8 @@
             Mousetrap.bind(s.new_ep, (e) => { e.preventDefault(); addEpisode(); });
             Mousetrap.bind(s.new_ch, (e) => { e.preventDefault(); addChapter(); });
             Mousetrap.bind(s.zen, (e) => { e.preventDefault(); toggleZenMode(); });
-            Mousetrap.bind(s.reader, (e) => { e.preventDefault(); toggleReaderMode(); });
+            Mousetrap.bind(s.reader, (e) => { e.preventDefault(); toggleViewMode(); }); // Changed to toggle view
+            Mousetrap.bind(s.find, (e) => { e.preventDefault(); toggleSearch(); });
             Mousetrap.bind(s.toggle_sidebar, (e) => { 
                 e.preventDefault(); 
                 const sb = document.getElementById('leftSidebar');
@@ -1809,7 +2171,7 @@
             const b = document.body;
             b.className = '';
             b.classList.add(state.ui.theme + '-mode');
-            if (state.ui.readerMode) b.classList.add('reader-mode');
+            if (state.ui.readerTheme) b.classList.add('reader-mode'); // Separated theme logic
             
             ['light', 'dark'].forEach(t => {
                 const btn = document.getElementById('btn-' + t);
@@ -1823,7 +2185,7 @@
             updateLanguage(); 
 
             const btnReader = document.getElementById('btn-reader-toggle');
-            if (state.ui.readerMode) {
+            if (state.ui.readerTheme) {
                 btnReader.classList.add('bg-[var(--accent-bg)]', 'border-[var(--accent-color)]', 'text-[var(--accent-color)]');
             } else {
                 btnReader.className = 'w-full h-full rounded-lg border border-[var(--border-color)] text-xs font-medium hover:border-[var(--accent-color)] transition-all text-[var(--text-secondary)]';
@@ -1869,7 +2231,6 @@
             elSession.className = 'font-bold font-mono ' + (sessionDiff >= 0 ? 'text-[var(--accent-color)]' : 'text-red-500');
         }
 
-        function toggleReaderMode() { state.ui.readerMode = !state.ui.readerMode; applyStyles(); saveData(); }
         function toggleZenMode() { document.body.classList.toggle('zen-mode'); state.ui.zen = !state.ui.zen; }
         function toggleOrientation() { state.ui.vertical = !state.ui.vertical; applyStyles(); saveData(); }
         function toggleLinedPaper() { state.ui.lined = !state.ui.lined; applyStyles(); saveData(); }
