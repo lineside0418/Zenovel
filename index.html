@@ -59,31 +59,32 @@
             --shadow-soft: 0 8px 30px rgba(0,0,0,0.4);
         }
 
-        /* Reader Mode */
-        .reader-mode.light-mode {
+        /* Reader Theme: Sepia (Available in Light Mode) */
+        .reader-theme-sepia {
             --bg-app: #f2efe4;
             --bg-sidebar: rgba(248, 245, 235, 0.9);
             --bg-editor: #fbf9f1;
             --bg-status: #fbf9f1;
-            --text-primary: #4a3b32;
+            --text-primary: #5b4636;
             --text-secondary: #8c7b6d;
-            --border-color: rgba(74, 59, 50, 0.08);
+            --border-color: rgba(74, 59, 50, 0.1);
             --accent-color: #a67c52;
-            --accent-bg: rgba(166, 124, 82, 0.1);
+            --accent-bg: rgba(166, 124, 82, 0.15);
             --line-color: #e0d0c0;
         }
-
-        .reader-mode.dark-mode {
-            --bg-app: #121212;
-            --bg-sidebar: rgba(20, 20, 20, 0.9);
-            --bg-editor: #181818;
-            --bg-status: #181818;
-            --text-primary: #b0b0b0;
-            --text-secondary: #666666;
-            --border-color: rgba(255, 255, 255, 0.05);
-            --accent-color: #7a7a7a;
-            --accent-bg: rgba(255, 255, 255, 0.05);
-            --line-color: #222;
+        
+        /* Reader Theme: Low Contrast (Available in Dark Mode) */
+        .reader-theme-low-contrast {
+            --bg-app: #1a1a1a;
+            --bg-sidebar: #1a1a1a;
+            --bg-editor: #222222;
+            --bg-status: #222222;
+            --text-primary: #888888;
+            --text-secondary: #555555;
+            --border-color: #333;
+            --accent-color: #666;
+            --accent-bg: #333;
+            --line-color: #333;
         }
 
         /* Base Reset */
@@ -229,12 +230,12 @@
         .font-gothic .editor-content-base { font-family: var(--font-gothic) !important; }
         .font-hand .editor-content-base { font-family: var(--font-hand) !important; }
 
-        /* Lined Paper */
+        /* Lined Paper - Horizontal (Default) */
         .style-lined .editor-content-base {
             background-image: linear-gradient(transparent calc(100% - 1px), var(--line-color) calc(100% - 1px));
             background-size: 100% var(--editor-line-height);
             background-attachment: local;
-            background-position: 0 4px;
+            background-position: 0 calc(var(--editor-padding-top) + 6px); /* Align manually */
         }
         
         /* Vertical Mode */
@@ -251,10 +252,13 @@
             overflow-x: auto;
             padding: 3rem var(--editor-padding-top);
         }
+        
+        /* Lined Paper - Vertical Fix */
         .writing-vertical.style-lined .editor-content-base {
-            background-image: linear-gradient(90deg, transparent calc(100% - 1px), var(--line-color) calc(100% - 1px));
+            background-image: linear-gradient(to left, transparent calc(100% - 1px), var(--line-color) calc(100% - 1px));
             background-size: var(--editor-line-height) 100%;
-            background-position: -4px 0;
+            background-attachment: local;
+            background-position: calc(var(--editor-padding-top) - 1.25em) 0; /* Align adjustment */
         }
 
         /* Sidebar Tree */
@@ -317,6 +321,7 @@
         body.zen-mode .zen-exit { opacity: 1; transform: translateY(0); pointer-events: auto; }
         body.zen-mode .app-status-bar { opacity: 0; pointer-events: none; }
         body.zen-mode #zenTimerDisplay { opacity: 1; pointer-events: auto; }
+        body.zen-mode #zenCharCount { opacity: 0.6; pointer-events: auto; }
 
         /* Floating Toolbar */
         .toolbar-float {
@@ -351,6 +356,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: var(--font-gothic);
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-container {
@@ -366,7 +372,7 @@
         }
         .modal-overlay.active .modal-container { transform: scale(1); }
 
-        .modal-title { font-weight: bold; font-size: 18px; margin-bottom: 8px; color: var(--text-primary); font-family: var(--font-mincho); }
+        .modal-title { font-weight: bold; font-size: 18px; margin-bottom: 8px; color: var(--text-primary); font-family: var(--font-ui); }
         .modal-msg { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
         .modal-input {
             width: 100%;
@@ -492,10 +498,10 @@
             font-size: 12px;
         }
 
-        /* Search Modal */
+        /* Search Modal (Draggable) */
         #searchModal {
             position: absolute;
-            top: 80px;
+            top: 120px;
             right: 40px;
             width: 320px;
             background: var(--bg-sidebar);
@@ -508,15 +514,28 @@
             z-index: 70;
             flex-direction: column;
             gap: 10px;
+            transition: opacity 0.2s, transform 0.2s;
         }
         #searchModal.active { display: flex; }
+        
+        /* Fixed error here: items-center; -> align-items: center; */
+        .search-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;
+            cursor: grab;
+        }
+        .search-header:active { cursor: grabbing; }
         .search-row { display: flex; gap: 8px; align-items: center; }
         .search-input { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-app); font-size: 13px; color: var(--text-primary); outline: none; }
         .search-btn { padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); }
         .search-btn:hover { background: var(--border-color); }
         .search-btn.primary { background: var(--accent-color); color: white; border-color: transparent; }
 
-        /* Share Modal (New) */
+        /* Share Modal */
+        /* Fixed font to Gothic */
+        #shareModal .modal-container {
+            font-family: var(--font-gothic) !important;
+        }
+        
         .share-tab-container { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
         .share-tab { flex: 1; text-align: center; padding: 10px; font-size: 13px; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
         .share-tab:hover { color: var(--text-primary); }
@@ -536,7 +555,7 @@
         .tweet-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px; color: var(--text-secondary); }
         .tweet-body { white-space: pre-wrap; margin-bottom: 8px; }
         .tweet-actions { display: flex; justify-content: flex-end; gap: 8px; }
-        .action-btn { padding: 4px 8px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); cursor: pointer; display: flex; alignItems: center; gap: 4px; }
+        .action-btn { padding: 4px 8px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; gap: 4px; }
         .action-btn:hover { background: var(--border-color); }
 
         .narou-preview {
@@ -600,13 +619,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: column;
         }
         
         .zen-ring-container {
             position: relative;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
+            margin-bottom: 8px;
+            opacity: 0.15; /* Reduced visibility */
+            transition: opacity 0.3s;
         }
+        .zen-ring-container:hover { opacity: 0.8; }
         
         .zen-ring-svg {
             transform: rotate(-90deg);
@@ -616,15 +640,15 @@
         
         .zen-ring-circle-bg {
             fill: none;
-            stroke: rgba(128,128,128,0.2);
-            stroke-width: 4;
+            stroke: var(--border-color);
+            stroke-width: 3;
         }
         
         .zen-ring-circle-progress {
             fill: none;
             stroke: var(--accent-color);
-            stroke-width: 4;
-            stroke-dasharray: 100, 100; /* Calculated in JS */
+            stroke-width: 3;
+            stroke-dasharray: 100, 100;
             stroke-linecap: round;
             transition: stroke-dashoffset 1s linear;
         }
@@ -634,12 +658,28 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             color: var(--text-secondary);
             font-variant-numeric: tabular-nums;
         }
-        
+
+        #zenCharCount {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-family: monospace;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        /* Animations */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: var(--accent-color); }
+            100% { transform: scale(1); }
+        }
+        .anim-pop { animation: pop 0.2s ease-out; }
+
     </style>
 </head>
 <body class="light-mode font-mincho">
@@ -707,8 +747,8 @@
 
     <!-- Search Modal -->
     <div id="searchModal">
-        <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-bold text-[var(--text-secondary)]">Find & Replace</span>
+        <div class="search-header" id="searchHeader">
+            <span class="text-xs font-bold text-[var(--text-secondary)]" data-i18n="findReplace">Find & Replace</span>
             <button onclick="toggleSearch()" class="hover:text-[var(--text-primary)]"><i data-lucide="x" class="w-3 h-3"></i></button>
         </div>
         <div class="search-row">
@@ -740,6 +780,7 @@
             </svg>
             <div class="zen-timer-text" id="zenTimerText">25</div>
         </div>
+        <div id="zenCharCount">0 chars</div>
     </div>
 
     <!-- Toast Container -->
@@ -800,15 +841,33 @@
                     <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
                 </button>
                 <div class="w-px h-3 bg-[var(--border-color)]"></div>
-                <button onclick="toggleOrientation()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                
+                <button onclick="toggleSearch()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Search (Ctrl+F)">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </button>
+                
+                <button onclick="toggleOrientation()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Toggle Vertical/Horizontal">
                     <i data-lucide="file-type" class="w-4 h-4"></i>
                 </button>
-                <button onclick="toggleLinedPaper()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                <button onclick="toggleLinedPaper()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Toggle Lines">
                     <i data-lucide="align-justify" class="w-4 h-4"></i>
                 </button>
-                <button onclick="toggleViewMode()" id="btnViewMode" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Toggle Reader Mode (Alt+R)">
-                    <i data-lucide="glasses" class="w-4 h-4"></i>
+                
+                <div class="w-px h-3 bg-[var(--border-color)]"></div>
+                
+                <!-- Separated Buttons for Themes and Modes -->
+                 <button onclick="cycleTheme()" id="btnThemeCycle" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="App Theme (Light/Dark)">
+                    <i data-lucide="moon" class="w-4 h-4"></i>
                 </button>
+
+                <button onclick="toggleReaderTheme()" id="btnReaderTheme" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Reader Color (Sepia/Low Contrast)">
+                    <i data-lucide="palette" class="w-4 h-4"></i>
+                </button>
+
+                <button onclick="toggleViewMode()" id="btnViewMode" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Reader Mode (Alt+R)">
+                    <i data-lucide="book" class="w-4 h-4"></i>
+                </button>
+
                 <div class="w-px h-3 bg-[var(--border-color)]"></div>
                 <div class="flex gap-1 font-mincho text-xs font-bold">
                     <button onclick="insertText('｜', '《》')" class="px-2 py-1 rounded hover:bg-[var(--border-color)] text-[var(--text-primary)]" data-i18n="ruby">ルビ</button>
@@ -865,7 +924,7 @@
                 <!-- INFO TAB -->
                 <div id="content-info" class="hidden absolute inset-0 overflow-y-auto p-6 space-y-6 custom-scroll">
                     <div class="text-center py-4">
-                        <div class="text-5xl font-light font-gothic text-[var(--text-primary)] tracking-tight" id="statCountBig">0</div>
+                        <div class="text-5xl font-light font-gothic text-[var(--text-primary)] tracking-tight transition-transform" id="statCountBig">0</div>
                         <div class="text-[10px] text-[var(--text-secondary)] uppercase mt-2 tracking-widest" data-i18n="totalChars">Total Characters</div>
                     </div>
                     
@@ -937,18 +996,18 @@
     <div id="shareModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 500px;">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="modal-title" style="margin:0">Share & Export</h3>
+                <h3 class="modal-title" style="margin:0" data-i18n="shareExport">Share & Export</h3>
                 <button onclick="closeShareModal()" class="hover:text-[var(--text-primary)] text-[var(--text-secondary)]"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
             <div class="share-tab-container">
                 <div class="share-tab active" onclick="switchShareTab('twitter')" id="shareTabTwitter">Twitter / X</div>
-                <div class="share-tab" onclick="switchShareTab('narou')" id="shareTabNarou">Narou (Web Novel)</div>
+                <div class="share-tab" onclick="switchShareTab('narou')" id="shareTabNarou" data-i18n="narouFormat">Narou (Web Novel)</div>
             </div>
 
             <!-- Twitter Content -->
             <div id="shareContentTwitter" class="share-content active">
-                <div class="text-xs text-[var(--text-secondary)] mb-2">Split content into 140-char chunks for threading.</div>
+                <div class="text-xs text-[var(--text-secondary)] mb-2" data-i18n="twitterDesc">Split content into 140-char chunks for threading.</div>
                 <div id="tweetList" class="overflow-y-auto max-h-[300px] custom-scroll pr-1">
                     <!-- Dynamic Tweets -->
                 </div>
@@ -956,16 +1015,16 @@
 
             <!-- Narou Content -->
             <div id="shareContentNarou" class="share-content">
-                <div class="text-xs text-[var(--text-secondary)] mb-2">Formatted for Shōsetsuka ni Narō.</div>
+                <div class="text-xs text-[var(--text-secondary)] mb-2" data-i18n="narouDesc">Formatted for Shōsetsuka ni Narō.</div>
                 <textarea id="narouPreview" class="narou-preview" readonly></textarea>
                 <label class="checkbox-label">
-                    <input type="checkbox" id="narouIndent"> Auto-indent paragraph start
+                    <input type="checkbox" id="narouIndent"> <span data-i18n="autoIndent">Auto-indent paragraph start</span>
                 </label>
                 <label class="checkbox-label">
-                    <input type="checkbox" id="narouEmptyLine"> Add empty lines between paragraphs
+                    <input type="checkbox" id="narouEmptyLine"> <span data-i18n="emptyLines">Add empty lines between paragraphs</span>
                 </label>
                 <div class="modal-actions">
-                    <button class="btn btn-primary w-full" onclick="copyNarouText()">Copy to Clipboard</button>
+                    <button class="btn btn-primary w-full" onclick="copyNarouText()" data-i18n="copyClipboard">Copy to Clipboard</button>
                 </div>
             </div>
         </div>
@@ -1003,17 +1062,11 @@
                     <div class="flex gap-4 mb-4">
                         <div class="flex-1 space-y-2">
                             <label class="text-[10px] font-bold text-[var(--text-secondary)]" data-i18n="theme">THEME</label>
-                            <div class="flex bg-[var(--border-color)] p-1 rounded-lg">
-                                <button onclick="setTheme('light')" class="flex-1 py-1.5 text-xs rounded-md transition-all" id="btn-light">Light</button>
-                                <button onclick="setTheme('dark')" class="flex-1 py-1.5 text-xs rounded-md transition-all" id="btn-dark">Dark</button>
+                            <div class="grid grid-cols-2 bg-[var(--border-color)] p-1 rounded-lg gap-1">
+                                <button onclick="setTheme('light')" class="py-1.5 text-xs rounded-md transition-all" id="btn-light">Light</button>
+                                <button onclick="setTheme('dark')" class="py-1.5 text-xs rounded-md transition-all" id="btn-dark">Dark</button>
                             </div>
                         </div>
-                         <div class="flex-1 space-y-2">
-                             <label class="text-[10px] font-bold text-[var(--text-secondary)]" data-i18n="readerMode">READER MODE</label>
-                             <div class="flex items-center h-[34px]">
-                                 <button onclick="toggleReaderMode()" id="btn-reader-toggle" class="w-full h-full rounded-lg border border-[var(--border-color)] text-xs font-medium hover:border-[var(--accent-color)] transition-all">Toggle</button>
-                             </div>
-                         </div>
                     </div>
                 </section>
 
@@ -1074,7 +1127,6 @@
                 language: "言語",
                 appearance: "外観",
                 theme: "テーマ",
-                readerMode: "閲覧モード",
                 typography: "タイポグラフィ",
                 fontFamily: "フォント",
                 fontMincho: "明朝体",
@@ -1123,7 +1175,15 @@
                 breakTime: "休憩時間 (分)",
                 start: "開始",
                 stop: "停止",
-                reset: "リセット"
+                reset: "リセット",
+                shareExport: "共有・書き出し",
+                narouFormat: "なろう形式",
+                twitterDesc: "スレッド投稿用に140文字で分割します。",
+                narouDesc: "「小説家になろう」等の投稿用に整形します。",
+                autoIndent: "段落の頭を字下げする",
+                emptyLines: "改行後に空行を入れる",
+                copyClipboard: "クリップボードにコピー",
+                findReplace: "検索・置換"
             },
             en: {
                 structure: "Structure",
@@ -1132,7 +1192,6 @@
                 language: "Language",
                 appearance: "Appearance",
                 theme: "Theme",
-                readerMode: "Reader Mode",
                 typography: "Typography",
                 fontFamily: "Font Family",
                 fontMincho: "Mincho",
@@ -1181,7 +1240,15 @@
                 breakTime: "Break (min)",
                 start: "Start",
                 stop: "Stop",
-                reset: "Reset"
+                reset: "Reset",
+                shareExport: "Share & Export",
+                narouFormat: "Web Novel Format",
+                twitterDesc: "Split content into 140-char chunks for threading.",
+                narouDesc: "Formatted for Web Novel platforms.",
+                autoIndent: "Auto-indent paragraph start",
+                emptyLines: "Add empty lines between paragraphs",
+                copyClipboard: "Copy to Clipboard",
+                findReplace: "Find & Replace"
             }
         };
 
@@ -1196,7 +1263,8 @@
             ui: {
                 chapterId: null,
                 episodeId: null,
-                theme: "light",
+                theme: "light", // 'light' | 'dark'
+                readerTheme: false, // true = sepia(if light) / low-contrast(if dark)
                 lang: "ja", 
                 readerMode: false,
                 font: "mincho",
@@ -1231,12 +1299,11 @@
         const els = {
             editor: document.getElementById('mainEditor'),
             viewer: document.getElementById('mainViewer'),
-            editorContainer: document.getElementById('mainContainer'), // For toggle class
+            editorContainer: document.getElementById('mainContainer'), 
             tree: document.getElementById('treeContainer'),
             modal: document.getElementById('settingsModal'),
             modalContent: document.getElementById('settingsContent'),
             ctxMenu: document.getElementById('contextMenu'),
-            // Modals
             promptModal: document.getElementById('promptModal'),
             promptInput: document.getElementById('promptInput'),
             confirmModal: document.getElementById('confirmModal'),
@@ -1256,7 +1323,6 @@
         function init() {
             loadData();
             
-            // Check Data Existence for Welcome Screen
             if (state.project.chapters.length > 0) {
                 document.getElementById('lastProjectName').innerText = state.project.title || t('untitled');
             } else {
@@ -1268,23 +1334,21 @@
             applyStyles();
             lucide.createIcons();
             
-            // Sync Lang Selector in Welcome
             const langSelect = document.querySelector('.lang-select');
             if(langSelect) langSelect.value = state.ui.lang;
 
-            // Start Clock
             setInterval(updateClock, 1000);
             updateClock();
             updatePomoDisplay();
 
-            // Setup Listeners
             setupShortcuts();
             setupDragAndDrop();
             setupModalListeners();
             setupInputs();
+            setupSearchDraggable();
             
-            // Explicitly handle Ctrl+S for JSON export
             document.addEventListener('keydown', (e) => {
+                // Save
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                     e.preventDefault();
                     exportJSON();
@@ -1471,25 +1535,57 @@
             }
         }
 
+        function setupSearchDraggable() {
+            const el = els.searchModal;
+            const header = document.getElementById('searchHeader');
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                // Get current computed position
+                const rect = el.getBoundingClientRect();
+                initialLeft = rect.left;
+                initialTop = rect.top;
+                el.style.right = 'auto'; // Reset right to allow left positioning
+                el.style.left = initialLeft + 'px';
+                el.style.top = initialTop + 'px';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                el.style.left = (initialLeft + dx) + 'px';
+                el.style.top = (initialTop + dy) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
         function findNext() {
             const query = document.getElementById('searchInput').value;
             if (!query) return;
             
             const text = els.editor.value;
-            const start = els.editor.selectionEnd; // Start from current pos
+            const start = els.editor.selectionEnd; 
             let idx = text.indexOf(query, start);
             
             if (idx === -1) {
-                // Loop around
                 idx = text.indexOf(query, 0);
             }
             
             if (idx !== -1) {
                 els.editor.focus();
                 els.editor.setSelectionRange(idx, idx + query.length);
-                // Scroll into view logic (basic)
                 const percent = idx / text.length;
-                els.editor.scrollTop = els.editor.scrollHeight * percent - els.editor.clientHeight / 2; 
+                if (!state.ui.vertical) {
+                   els.editor.scrollTop = els.editor.scrollHeight * percent - els.editor.clientHeight / 2; 
+                }
             } else {
                 showToast("Not found", 'info');
             }
@@ -1500,18 +1596,15 @@
             const replace = document.getElementById('replaceInput').value;
             if (!query) return;
             
-            // Check if current selection matches query (to replace current highlight)
             const selStart = els.editor.selectionStart;
             const selEnd = els.editor.selectionEnd;
             const selText = els.editor.value.substring(selStart, selEnd);
             
             if (selText === query) {
-                // Replace
                 els.editor.setRangeText(replace, selStart, selEnd, 'end');
-                findNext(); // Move to next
+                findNext(); 
                 updateStats();
             } else {
-                // Just find first
                 findNext();
             }
         }
@@ -1532,9 +1625,8 @@
             }
         }
 
-        // --- Reader Mode ---
+        // --- Reader Mode & Themes ---
         function toggleViewMode() {
-            // Check current status via class on container?
             const isView = els.editorContainer.classList.contains('view-mode');
             if (isView) {
                 enableEditMode();
@@ -1544,22 +1636,15 @@
         }
 
         function enableViewMode() {
-            state.ui.readerMode = true; // Use this as toggle state if needed, or separate variable
+            state.ui.readerMode = true; 
             els.editorContainer.classList.add('view-mode');
             
-            // Parse Ruby
             let text = els.editor.value;
-            // Escape HTML first
             text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            // Ruby Parsing: ｜Kanji《Reading》
             text = text.replace(/｜([^《]+)《([^》]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
-            // Ruby Parsing: Kanji《Reading》 (simple auto-detect for brackets next to kanji blocks?)
-            // Keeping it simple/safe: explicit pipe or kanji block
             text = text.replace(/([\u4E00-\u9FFF]+)《([^》]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
             
             els.viewer.innerHTML = text;
-            
-            // Sync Scroll (approximate)
             els.viewer.scrollTop = els.editor.scrollTop;
             els.viewer.scrollLeft = els.editor.scrollLeft;
             
@@ -1569,16 +1654,19 @@
         function enableEditMode() {
             state.ui.readerMode = false;
             els.editorContainer.classList.remove('view-mode');
-            els.editor.scrollTop = els.viewer.scrollTop; // Sync back
+            els.editor.scrollTop = els.viewer.scrollTop;
             els.editor.scrollLeft = els.viewer.scrollLeft;
             document.getElementById('btnViewMode').classList.remove('text-[var(--accent-color)]');
             els.editor.focus();
         }
 
-        function toggleReaderMode() {
-            // This was the old CSS-based toggle for themes (Sepia/LowContrast). 
-            // Now "Reader Mode" implies the ruby rendering view in this context request.
-            // Let's repurpose this toggle button in Settings to toggle the "Sepia/Dark Reader Theme" logic separately from View Mode.
+        function cycleTheme() {
+            // Simplified: Just toggle Light/Dark
+            state.ui.theme = state.ui.theme === 'light' ? 'dark' : 'light';
+            setTheme(state.ui.theme);
+        }
+
+        function toggleReaderTheme() {
             state.ui.readerTheme = !state.ui.readerTheme;
             applyStyles();
             saveData();
@@ -1587,7 +1675,6 @@
         // --- Share & Export ---
         function openShareModal() {
             els.shareModal.classList.add('active');
-            // Refresh content based on current active tab
             if(document.getElementById('shareTabTwitter').classList.contains('active')) {
                 renderTweets();
             } else {
@@ -1637,8 +1724,6 @@
                     result.push(remaining);
                     break;
                 }
-                
-                // Find split point
                 let splitIdx = limit;
                 const searchWindow = remaining.substring(limit - 20, limit);
                 let bestBreak = -1;
@@ -1646,9 +1731,7 @@
                     const idx = remaining.lastIndexOf(char, limit);
                     if(idx > limit - 20 && idx > bestBreak) bestBreak = idx;
                 });
-                
-                if(bestBreak !== -1) splitIdx = bestBreak + 1; // Include the punctuation
-                
+                if(bestBreak !== -1) splitIdx = bestBreak + 1;
                 result.push(remaining.substring(0, splitIdx));
                 remaining = remaining.substring(splitIdx).trimStart();
             }
@@ -1681,7 +1764,7 @@
         // Utils
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                showToast("Copied to clipboard!", 'success');
+                showToast(t('copyClipboard'), 'success');
             });
         }
         function escapeHtml(text) {
@@ -1691,7 +1774,6 @@
             return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
         }
 
-        // --- Toast System ---
         function showToast(msg, type = 'info') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -1707,7 +1789,6 @@
             }, 3000);
         }
 
-        // --- Localization Helpers ---
         function t(key) { return i18n[state.ui.lang][key] || key; }
 
         function updateLanguage() {
@@ -1717,14 +1798,11 @@
             });
             document.getElementById('mainEditor').placeholder = state.ui.lang === 'ja' ? "物語を、ここから……" : "Start your story here...";
             
-            // Buttons
-            document.getElementById('lang-ja').className = `flex-1 py-1.5 text-xs rounded-md transition-all ${state.ui.lang === 'ja' ? 'bg-white shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`;
-            document.getElementById('lang-en').className = `flex-1 py-1.5 text-xs rounded-md transition-all ${state.ui.lang === 'en' ? 'bg-white shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`;
-            
-            if(state.ui.theme === 'dark') {
-                 if(state.ui.lang === 'ja') document.getElementById('lang-ja').classList.add('bg-white/20', 'text-white');
-                 if(state.ui.lang === 'en') document.getElementById('lang-en').classList.add('bg-white/20', 'text-white');
-            }
+            ['ja', 'en'].forEach(l => {
+                const btn = document.getElementById('lang-' + l);
+                btn.className = `flex-1 py-1.5 text-xs rounded-md transition-all ${state.ui.lang === l ? 'bg-white shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`;
+                if(state.ui.theme === 'dark' && state.ui.lang === l) btn.classList.add('bg-white/20', 'text-white');
+            });
         }
 
         function setLang(l) {
@@ -1874,7 +1952,6 @@
                 const ch = state.project.chapters.find(c => c.episodes.includes(ep));
                 if(ch) ch.isOpen = true;
                 state.ui.chapterId = ch ? ch.id : null;
-                // Re-render preview if active
                 if(state.ui.readerMode || els.editorContainer.classList.contains('view-mode')) enableViewMode();
             }
         }
@@ -2123,6 +2200,7 @@
                 setTimeout(() => m.classList.add('hidden'), 300);
             }
         }
+        
         function setupShortcuts() {
             Mousetrap.reset();
             const s = state.shortcuts;
@@ -2130,15 +2208,28 @@
             Mousetrap.bind(s.new_ep, (e) => { e.preventDefault(); addEpisode(); });
             Mousetrap.bind(s.new_ch, (e) => { e.preventDefault(); addChapter(); });
             Mousetrap.bind(s.zen, (e) => { e.preventDefault(); toggleZenMode(); });
-            Mousetrap.bind(s.reader, (e) => { e.preventDefault(); toggleViewMode(); }); // Changed to toggle view
-            Mousetrap.bind(s.find, (e) => { e.preventDefault(); toggleSearch(); });
+            Mousetrap.bind(s.reader, (e) => { e.preventDefault(); toggleViewMode(); }); 
+            Mousetrap.bind(s.find, (e) => { 
+                e.preventDefault(); // Stop Browser Find
+                toggleSearch(); 
+                return false;
+            });
             Mousetrap.bind(s.toggle_sidebar, (e) => { 
                 e.preventDefault(); 
                 const sb = document.getElementById('leftSidebar');
                 sb.style.transform = sb.style.transform === 'translateX(-100%)' ? 'translateX(0)' : 'translateX(-100%)';
                 if(sb.style.width === '0px') { sb.style.width = '18rem'; } else { sb.style.width = '0px'; }
             });
+            // Native listeners for input behavior
+            els.editor.addEventListener('keydown', (e) => {
+                 if (e.key === 'Tab') {
+                    e.preventDefault();
+                    // Insert full-width space or tab
+                    insertText('\u3000');
+                }
+            });
         }
+
         function setupInputs() {
             els.editor.addEventListener('input', () => {
                 const ep = getCurrentEpisode();
@@ -2170,27 +2261,36 @@
             const r = document.documentElement.style;
             const b = document.body;
             b.className = '';
+            
+            // Base Mode
             b.classList.add(state.ui.theme + '-mode');
-            if (state.ui.readerTheme) b.classList.add('reader-mode'); // Separated theme logic
+            
+            // Reader Theme Overlay
+            if (state.ui.readerTheme) {
+                document.getElementById('btnReaderTheme').classList.add('text-[var(--accent-color)]');
+                if (state.ui.theme === 'light') {
+                    b.classList.add('reader-theme-sepia');
+                } else {
+                    b.classList.add('reader-theme-low-contrast');
+                }
+            } else {
+                document.getElementById('btnReaderTheme').classList.remove('text-[var(--accent-color)]');
+            }
             
             ['light', 'dark'].forEach(t => {
                 const btn = document.getElementById('btn-' + t);
                 if (state.ui.theme === t) {
                     btn.classList.add('bg-white', 'shadow-sm', 'text-[var(--text-primary)]');
                     if (t === 'dark') btn.classList.add('bg-white/20', 'text-white');
+                    else btn.classList.remove('bg-white/20', 'text-white');
                 } else {
-                    btn.className = 'flex-1 py-1.5 text-xs rounded-md text-[var(--text-secondary)] transition-all hover:bg-[var(--border-color)]';
+                    btn.className = 'py-1.5 text-xs rounded-md transition-all hover:bg-[var(--border-color)]';
                 }
             });
+            
             updateLanguage(); 
 
-            const btnReader = document.getElementById('btn-reader-toggle');
-            if (state.ui.readerTheme) {
-                btnReader.classList.add('bg-[var(--accent-bg)]', 'border-[var(--accent-color)]', 'text-[var(--accent-color)]');
-            } else {
-                btnReader.className = 'w-full h-full rounded-lg border border-[var(--border-color)] text-xs font-medium hover:border-[var(--accent-color)] transition-all text-[var(--text-secondary)]';
-            }
-            
+            // Font buttons
             ['mincho', 'gothic', 'hand'].forEach(f => {
                 const btn = document.getElementById('font-' + f);
                 if (state.ui.font === f) btn.classList.add('active');
@@ -2221,10 +2321,21 @@
             const text = els.editor.value;
             const charCount = text.replace(/\s/g, '').length;
             const lines = text.split('\n').length;
-            document.getElementById('statCountBig').innerText = charCount.toLocaleString();
+            
+            const bigCount = document.getElementById('statCountBig');
+            const prev = bigCount.innerText;
+            if(prev != charCount.toLocaleString()) {
+                bigCount.classList.remove('anim-pop');
+                void bigCount.offsetWidth; // trigger reflow
+                bigCount.classList.add('anim-pop');
+            }
+
+            bigCount.innerText = charCount.toLocaleString();
             document.getElementById('statPaper').innerText = (charCount / 400).toFixed(1);
             document.getElementById('statTime').innerText = Math.ceil(charCount / 600) + ' min';
             document.getElementById('statLines').innerText = lines;
+            document.getElementById('zenCharCount').innerText = charCount + ' chars';
+
             const sessionDiff = charCount - state.sessionStartCount;
             const elSession = document.getElementById('sessionCount');
             elSession.innerText = (sessionDiff > 0 ? '+' : '') + sessionDiff;
@@ -2277,7 +2388,7 @@
                 const p = JSON.parse(d);
                 state.project = { ...state.project, ...p.project };
                 state.ui = { ...state.ui, ...p.ui };
-                state.shortcuts = { ...state.shortcuts, ...p.shortcuts };
+                if (p.shortcuts) state.shortcuts = { ...state.shortcuts, ...p.shortcuts };
             }
         }
         function debounce(func, wait) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func(...a), wait); }; }
